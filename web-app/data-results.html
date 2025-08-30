@@ -5,17 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SpaceData - Data Results</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="/web-app/styles.css">
+    <link rel="stylesheet" href="styles.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <!-- Add ethers.js for blockchain interactions -->
     <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js" type="application/javascript"></script>
     
+    <script src="runtime-config.js"></script>
     <!-- Application scripts -->
-    <script src="/web-app/metamask-connection.js"></script>
-    <script src="/web-app/flare-services.js"></script>
-    <script src="/web-app/wallet.js"></script>
-    <script src="/web-app/copernicus-api.js"></script>
+    <script src="metamask-connection.js"></script>
+    <script src="flare-services.js"></script>
+    <script src="wallet.js"></script>
+    <script src="copernicus-api.js"></script>
 </head>
 <body>
     <div class="container">
@@ -33,7 +34,7 @@
         <main>
             <!-- Back Button and Page Title -->
             <div class="page-header">
-                <a href="/web-app/data-selection.html" class="back-button">
+                <a href="data-selection.html" class="back-button">
                     <span class="back-arrow">←</span>
                     <span>Back</span>
                 </a>

@@ -3,10 +3,12 @@
  * Handles satellite data requests and responses
  */
 
+const API_BASE = (window.RUNTIME_CONFIG && window.RUNTIME_CONFIG.NODE_API_BASE) || '';
+
 // API Configuration for backend server
 const API_CONFIG = {
     // Base URL for API endpoints
-    BASE_URL: '/api',
+    BASE_URL: `${API_BASE}/api`,
     // Copernicus API endpoints
     COPERNICUS: {
         SEARCH: '/copernicus/search',

@@ -32,7 +32,13 @@ logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__, static_folder='static', template_folder='templates')
-CORS(app)  # Enable CORS for all routes
+# CORS: allow local dev by default; restrict via CORS_ORIGINS in production (comma-separated)
+cors_origins = os.environ.get('CORS_ORIGINS')
+if cors_origins:
+    origins_list = [o.strip() for o in cors_origins.split(',') if o.strip()]
+    CORS(app, origins=origins_list, supports_credentials=True)
+else:
+    CORS(app)
 
 # Register blockchain blueprint
 app.register_blueprint(blockchain_bp, url_prefix='/api/blockchain')
@@ -269,4 +275,5 @@ def download_image():
 
 # Run the app if executed directly
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=True, host='0.0.0.0', port=port)

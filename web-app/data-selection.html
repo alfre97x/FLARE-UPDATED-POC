@@ -5,21 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SpaceData - Select Satellite Data</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="/web-app/styles.css">
+    <link rel="stylesheet" href="styles.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-geometryutil"></script>
     
     <!-- Add ethers.js for blockchain interactions -->
     <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js" type="application/javascript"></script>
     
+    <script src="runtime-config.js"></script>
     <!-- Application scripts -->
-    <script src="/web-app/metamask-connection.js"></script>
+    <script src="metamask-connection.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
-    <script src="/web-app/flare-services.js"></script>
-    <script src="/web-app/wallet.js"></script>
-    <script src="/web-app/flare-vrf.js"></script>
-    <script src="/web-app/pricing.js"></script>
-    <script src="/web-app/copernicus-api.js"></script>
+    <script src="flare-services.js"></script>
+    <script src="wallet.js"></script>
+    <script src="flare-vrf.js"></script>
+    <script src="pricing.js"></script>
+    <script src="copernicus-api.js"></script>
 </head>
 <body>
     <div class="container">
@@ -37,7 +38,7 @@
         <main>
             <!-- Back Button and Page Title -->
             <div class="page-header">
-                <a href="/web-app/index.html" class="back-button">
+                <a href="index.html" class="back-button">
                     <span class="back-arrow">←</span>
                     <span>Back</span>
                 </a>
@@ -288,7 +289,7 @@
                     console.warn('MetaMask not detected, using fallback mode');
                     
                     // Navigate to results page with fallback hash
-                    const resultsUrl = `/web-app/data-results.html?dataType=${dataTypeParam}` + 
+                    const resultsUrl = `data-results.html?dataType=${dataTypeParam}` + 
                                       `&startDate=${dateRange.startDate}` +
                                       `&endDate=${dateRange.endDate}` +
                                       `&aiAnalysis=${aiAnalysisEnabled}` +
@@ -306,7 +307,7 @@
                     console.warn('Failed to initialize blockchain connection, using fallback mode');
                     
                     // Navigate to results page with fallback hash
-                    const resultsUrl = `/web-app/data-results.html?dataType=${dataTypeParam}` + 
+                    const resultsUrl = `data-results.html?dataType=${dataTypeParam}` + 
                                       `&startDate=${dateRange.startDate}` +
                                       `&endDate=${dateRange.endDate}` +
                                       `&aiAnalysis=${aiAnalysisEnabled}` +
@@ -361,7 +362,7 @@
                     : fallbackTxHash;
                 
                 // Navigate to results page with transaction hash
-                const resultsUrl = `/web-app/data-results.html?dataType=${dataTypeParam}` + 
+                const resultsUrl = `data-results.html?dataType=${dataTypeParam}` + 
                                   `&startDate=${dateRange.startDate}` +
                                   `&endDate=${dateRange.endDate}` +
                                   `&aiAnalysis=${aiAnalysisEnabled}` +

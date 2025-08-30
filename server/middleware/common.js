@@ -12,8 +12,17 @@ const express = require('express');
  */
 const applyCommonMiddleware = (app) => {
   // Enable CORS for all routes with specific configuration for development
+  const defaultOrigins = ['http://localhost:8080', 'http://localhost:3000', 'http://localhost:19006', 'http://127.0.0.1:19006'];
+  const envOrigins = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',').map(o => o.trim()).filter(Boolean) : [];
+  const allowedOrigins = [...defaultOrigins, ...envOrigins];
+
   app.use(cors({
-    origin: ['http://localhost:8080', 'http://localhost:3000', 'http://localhost:19006', 'http://127.0.0.1:19006'],
+    origin: function (origin, callback) {
+      // allow requests with no origin (like mobile apps, curl, server-to-server)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error('Not allowed by CORS: ' + origin));
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true

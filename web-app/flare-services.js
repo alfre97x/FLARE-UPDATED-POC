@@ -3,6 +3,8 @@
  * Provides functions for interacting with the Flare blockchain
  */
 
+const API_BASE = (window.RUNTIME_CONFIG && window.RUNTIME_CONFIG.NODE_API_BASE) || '';
+
 // Global variables
 let web3;
 let dataPurchaseContract;
@@ -102,7 +104,7 @@ async function initializeBlockchain() {
                 });
                 
                 // Fetch contract configuration from backend
-                const response = await fetch('/api/blockchain/config');
+                const response = await fetch(`${API_BASE}/api/blockchain/config`);
                 const config = await response.json();
                 
                 // Update contract configuration
@@ -163,9 +165,9 @@ async function initializeBlockchain() {
 async function initializeContracts() {
     try {
         // Load ABIs
-        const dataPurchaseAbi = await fetch('/abi/datapurchase_abi.json').then(res => res.json());
-        const fdcHubAbi = await fetch('/abi/fdc_hub_abi.json').then(res => res.json());
-        const fdcVerificationAbi = await fetch('/abi/fdc_verification_abi.json').then(res => res.json());
+        const dataPurchaseAbi = await fetch(`${API_BASE}/abi/datapurchase_abi.json`).then(res => res.json());
+        const fdcHubAbi = await fetch(`${API_BASE}/abi/fdc_hub_abi.json`).then(res => res.json());
+        const fdcVerificationAbi = await fetch(`${API_BASE}/abi/fdc_verification_abi.json`).then(res => res.json());
         
         // Initialize contracts
         if (contractConfig.dataPurchaseAddress) {
@@ -262,7 +264,7 @@ async function purchaseData(requestId, amount) {
 async function requestAttestation(attestationType, parameters) {
     try {
         // Use backend API to request attestation
-        const response = await fetch('/api/blockchain/request-attestation', {
+        const response = await fetch(`${API_BASE}/api/blockchain/request-attestation`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -295,7 +297,7 @@ async function requestAttestation(attestationType, parameters) {
 async function fetchAttestationResult(requestId) {
     try {
         // Use backend API to fetch attestation result
-        const response = await fetch(`/api/blockchain/fetch-attestation/${requestId}`);
+        const response = await fetch(`${API_BASE}/api/blockchain/fetch-attestation/${requestId}`);
         const result = await response.json();
         
         if (!result.success) {
@@ -320,7 +322,7 @@ async function fetchAttestationResult(requestId) {
 async function verifyAttestation(requestId, attestationResponse, proof) {
     try {
         // Use backend API to verify attestation
-        const response = await fetch('/api/blockchain/verify-attestation', {
+        const response = await fetch(`${API_BASE}/api/blockchain/verify-attestation`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -356,7 +358,7 @@ async function verifyAttestation(requestId, attestationResponse, proof) {
 async function deliverData(requestId, attestationResponse, proof) {
     try {
         // Use backend API to deliver data
-        const response = await fetch('/api/blockchain/deliver-data', {
+        const response = await fetch(`${API_BASE}/api/blockchain/deliver-data`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -390,7 +392,7 @@ async function deliverData(requestId, attestationResponse, proof) {
 async function generateRequestId(dataInfo) {
     try {
         // Use backend API to generate request ID
-        const response = await fetch('/api/blockchain/generate-request-id', {
+        const response = await fetch(`${API_BASE}/api/blockchain/generate-request-id`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

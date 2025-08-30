@@ -58,12 +58,17 @@ app.use((req, res, next) => {
 app.use(notFound);
 app.use(errorHandler);
 
-// Explicitly set port to 3001 to avoid conflict with Python server on 3000
-const port = 3001;
+/**
+ * Port/host configuration for local and PaaS environments
+ * Railway/Heroku/etc. inject PORT (and sometimes HOST)
+ */
+const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
+const host = process.env.HOST || '0.0.0.0';
 
 // Start the server
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-  console.log(`Access the application at http://localhost:${port}/web-app`);
-  console.log(`API available at http://localhost:${port}/api`);
+app.listen(port, host, () => {
+  const displayHost = host === '0.0.0.0' ? 'localhost' : host;
+  console.log(`Server running at http://${displayHost}:${port}`);
+  console.log(`Access the application at http://${displayHost}:${port}/web-app`);
+  console.log(`API available at http://${displayHost}:${port}/api`);
 });
