@@ -1,0 +1,368 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_vrfCoordinator",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "_keyHash",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "userProvidedId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "randomValue",
+        "type": "uint256"
+      }
+    ],
+    "name": "RandomnessDelivered",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "userProvidedId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
+      }
+    ],
+    "name": "RandomnessRequested",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "callbackGasLimit",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "requestId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "randomWords",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "fulfillRandomWords",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_userProvidedId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getNormalizedRandomValue",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "normalizedValue",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "fulfilled",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_userProvidedId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_basePrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_variationPercent",
+        "type": "uint256"
+      }
+    ],
+    "name": "getRandomPriceVariation",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "finalPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "int256",
+        "name": "variationFactor",
+        "type": "int256"
+      },
+      {
+        "internalType": "bool",
+        "name": "fulfilled",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_userProvidedId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getRandomValue",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "randomValue",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "fulfilled",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "keyHash",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "numWords",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "requestConfirmations",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "requestIdToUserProvidedId",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_userProvidedId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "requestRandomness",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_keyHash",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "_callbackGasLimit",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint16",
+        "name": "_requestConfirmations",
+        "type": "uint16"
+      }
+    ],
+    "name": "updateVRFConfig",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_vrfCoordinator",
+        "type": "address"
+      }
+    ],
+    "name": "updateVRFCoordinator",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "userProvidedIdFulfilled",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "userProvidedIdToRandomValue",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "vrfCoordinator",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "withdraw",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "receive"
+  }
+]

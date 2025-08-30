@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpaceData - Data Results</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Add Web3.js for blockchain interactions -->
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
+    
+    <!-- Application scripts -->
+    <script src="{{ url_for('static', filename='js/wallet.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/flare-services.js') }}"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="logo">
+                <div class="logo-circle"></div>
+                <h1>SpaceData</h1>
+            </div>
+            <div class="header-nav">
+                <a href="#" class="sign-in-link">Account</a>
+            </div>
+        </header>
+
+        <main>
+            <!-- Back Button and Page Title -->
+            <div class="page-header">
+                <a href="{{ url_for('data_selection') }}" class="back-button">
+                    <span class="back-arrow">←</span>
+                    <span>Back</span>
+                </a>
+                <div class="page-title-container">
+                    <h2 class="page-title">Data Results</h2>
+                    <p class="location-date">{{ location_name }} • {{ start_date }} to {{ end_date }}</p>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="tabs-container">
+                <div class="tabs">
+                    <a href="{{ url_for('data_results', view='raw', **request_params) }}" class="tab {% if view == 'raw' %}active{% endif %}">Raw Data</a>
+                    <a href="{{ url_for('data_results', view='analysis', **request_params) }}" class="tab {% if view == 'analysis' %}active{% endif %}">AI Analysis</a>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <section class="section results-content">
+                <!-- Earth Observation Image -->
+                <div class="satellite-image-container">
+                    <div class="satellite-images-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; width: 100%;">
+                        {% if satellite_image_urls and satellite_image_urls|length > 0 %}
+                            {% for image_url in satellite_image_urls %}
+                                <div class="satellite-image" style="border-radius: 8px; overflow: hidden;">
+                                    <img src="{{ image_url }}" alt="Satellite image {{ loop.index }}" class="satellite-image-content" style="width: 100%; height: auto; object-fit: cover;">
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div style="width: 100%; height: 400px; display: flex; align-items: center; justify-content: center; background-color: #f8f8f8; border-radius: 8px; grid-column: 1 / -1;">
+                                <p style="font-size: 18px; color: #666;">No satellite images available for the selected criteria</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Analysis Results Section -->
+                <h3 class="results-section-title">
+                    {% if view == 'analysis' %}
+                        AI Analysis Results
+                    {% else %}
+                        Raw Satellite Data
+                    {% endif %}
+                </h3>
+                
+                {% if view == 'analysis' %}
+                <div class="analysis-charts">
+                    <!-- Land Cover Distribution Chart -->
+                    <div class="chart-container">
+                        <h4 class="chart-title">Land Cover Distribution</h4>
+                        <div class="donut-chart-container">
+                            <div class="donut-chart">
+                                {% set total = analysis_results.land_cover.forest + analysis_results.land_cover.urban + analysis_results.land_cover.water %}
+                                {% set offset = 0 %}
+                                
+                                <div class="donut-segment forest" style="--offset: 0; --length: {{ (analysis_results.land_cover.forest / total) * 100 }}"></div>
+                                {% set offset = offset + (analysis_results.land_cover.forest / total) * 100 %}
+                                
+                                <div class="donut-segment urban" style="--offset: {{ offset }}; --length: {{ (analysis_results.land_cover.urban / total) * 100 }}"></div>
+                                {% set offset = offset + (analysis_results.land_cover.urban / total) * 100 %}
+                                
+                                <div class="donut-segment water" style="--offset: {{ offset }}; --length: {{ (analysis_results.land_cover.water / total) * 100 }}"></div>
+                            </div>
+                            <div class="chart-legend">
+                                <div class="legend-item">
+                                    <div class="legend-color forest"></div>
+                                    <div class="legend-text">Forest ({{ (analysis_results.land_cover.forest / total * 100) | round(1) }}%)</div>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color urban"></div>
+                                    <div class="legend-text">Urban ({{ (analysis_results.land_cover.urban / total * 100) | round(1) }}%)</div>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color water"></div>
+                                    <div class="legend-text">Water ({{ (analysis_results.land_cover.water / total * 100) | round(1) }}%)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Change Detection Chart -->
+                    <div class="chart-container">
+                        <h4 class="chart-title">Change Detection</h4>
+                        <div class="bar-chart-container">
+                            <div class="bar-chart">
+                                <div class="chart-axes">
+                                    <div class="y-axis"></div>
+                                    <div class="x-axis"></div>
+                                    <div class="zero-line"></div>
+                                </div>
+                                <div class="bars">
+                                    <div class="bar-group">
+                                        <div class="bar forest {% if analysis_results.change.forest_change < 0 %}negative{% else %}positive{% endif %}" 
+                                             style="--height: {{ analysis_results.change.forest_change | abs }}"></div>
+                                        <div class="bar-label">Forest</div>
+                                        <div class="bar-value {% if analysis_results.change.forest_change < 0 %}negative{% else %}positive{% endif %}">
+                                            {% if analysis_results.change.forest_change > 0 %}+{% endif %}{{ analysis_results.change.forest_change }}%
+                                        </div>
+                                    </div>
+                                    <div class="bar-group">
+                                        <div class="bar urban {% if analysis_results.change.urban_change < 0 %}negative{% else %}positive{% endif %}" 
+                                             style="--height: {{ analysis_results.change.urban_change | abs }}"></div>
+                                        <div class="bar-label">Urban</div>
+                                        <div class="bar-value {% if analysis_results.change.urban_change < 0 %}negative{% else %}positive{% endif %}">
+                                            {% if analysis_results.change.urban_change > 0 %}+{% endif %}{{ analysis_results.change.urban_change }}%
+                                        </div>
+                                    </div>
+                                    <div class="bar-group">
+                                        <div class="bar water {% if analysis_results.change.water_change < 0 %}negative{% else %}positive{% endif %}" 
+                                             style="--height: {{ analysis_results.change.water_change | abs }}"></div>
+                                        <div class="bar-label">Water</div>
+                                        <div class="bar-value {% if analysis_results.change.water_change < 0 %}negative{% else %}positive{% endif %}">
+                                            {% if analysis_results.change.water_change > 0 %}+{% endif %}{{ analysis_results.change.water_change }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <!-- Raw Data View -->
+                <div class="raw-data-container">
+                    <div class="metadata-section">
+                        <h4>Satellite Data Metadata</h4>
+                        <table class="metadata-table">
+                            <tr>
+                                <th>Data Type:</th>
+                                <td>{{ data_type }}</td>
+                            </tr>
+                            <tr>
+                                <th>Date Range:</th>
+                                <td>{{ start_date }} to {{ end_date }}</td>
+                            </tr>
+                            <tr>
+                                <th>Resolution:</th>
+                                <td>
+                                    {% if data_type == 'S2MSI2A' %}10m
+                                    {% elif data_type == 'S1GRD' %}5-20m
+                                    {% elif data_type == 'S3OLCI' %}300m
+                                    {% else %}Unknown
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Cloud Cover:</th>
+                                <td>{{ cloud_cover }}%</td>
+                            </tr>
+                            <tr>
+                                <th>Area Size:</th>
+                                <td>{{ area_size }} sq km</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+            </section>
+
+            <!-- AI Chat Section -->
+            <section class="section chat-section">
+                <h3 class="chat-section-title">Chat with AI Assistant</h3>
+                
+                <div class="chat-messages">
+                    {% for message in chat_messages %}
+                        <div class="chat-message {{ message.type }}">
+                            {% if message.type == 'ai' %}
+                                <div class="message-avatar">AI</div>
+                            {% endif %}
+                            <div class="message-content">
+                                {{ message.content }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <form action="{{ url_for('chat_message') }}" method="POST" class="chat-form" id="chat-form">
+                    <input type="hidden" name="data_type" value="{{ data_type }}">
+                    <input type="hidden" name="start_date" value="{{ start_date }}">
+                    <input type="hidden" name="end_date" value="{{ end_date }}">
+                    <input type="hidden" name="coordinates" value="{{ coordinates }}">
+                    <input type="hidden" name="location_name" value="{{ location_name }}">
+                    <input type="hidden" name="tx_hash" value="{{ tx_hash }}">
+                    <input type="hidden" name="view" value="{{ view }}">
+                    {% for image_url in satellite_image_urls %}
+                    <input type="hidden" name="image_urls[]" value="{{ image_url }}">
+                    {% endfor %}
+                    
+                    <div class="chat-input-container">
+                        <input type="text" name="message" id="chat-input" class="chat-input" placeholder="Ask about this satellite data...">
+                        <button type="submit" class="chat-send-button" id="chat-send-button">
+                            <span class="send-icon">↗</span>
+                        </button>
+                    </div>
+                </form>
+                
+                <script>
+                    // Enhanced chat functionality with client-side feedback
+                    document.getElementById('chat-form').addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        
+                        const messageInput = document.getElementById('chat-input');
+                        const message = messageInput.value.trim();
+                        
+                        if (!message) return;
+                        
+                        // Add user message to chat immediately for better UX
+                        const chatMessages = document.querySelector('.chat-messages');
+                        const userMessageElement = document.createElement('div');
+                        userMessageElement.className = 'chat-message user';
+                        userMessageElement.innerHTML = '<div class="message-content">' + message + '</div>';
+                        chatMessages.appendChild(userMessageElement);
+                        
+                        // Clear input
+                        messageInput.value = '';
+                        
+                        // Add loading indicator
+                        const loadingElement = document.createElement('div');
+                        loadingElement.className = 'chat-message ai';
+                        loadingElement.innerHTML = '<div class="message-avatar">AI</div><div class="message-content"><div class="ai-assistant-spinner"></div></div>';
+                        chatMessages.appendChild(loadingElement);
+                        
+                        // Scroll to bottom
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                        
+                        // Get form data
+                        const data_type = document.querySelector('input[name="data_type"]').value;
+                        const start_date = document.querySelector('input[name="start_date"]').value;
+                        const end_date = document.querySelector('input[name="end_date"]').value;
+                        const coordinates = document.querySelector('input[name="coordinates"]').value;
+                        const location_name = document.querySelector('input[name="location_name"]').value;
+                        const tx_hash = document.querySelector('input[name="tx_hash"]').value;
+                        const view = document.querySelector('input[name="view"]').value;
+                        
+                        // Create form data manually
+                        const formData = new FormData();
+                        formData.append('data_type', data_type);
+                        formData.append('start_date', start_date);
+                        formData.append('end_date', end_date);
+                        formData.append('coordinates', coordinates);
+                        formData.append('location_name', location_name);
+                        formData.append('tx_hash', tx_hash);
+                        formData.append('view', view);
+                        formData.append('message', message);
+                        
+                        // Add image URLs
+                        const imageUrlInputs = document.querySelectorAll('input[name="image_urls[]"]');
+                        imageUrlInputs.forEach(input => {
+                            formData.append('image_urls[]', input.value);
+                        });
+                        
+                        // Send the request using XMLHttpRequest instead of fetch
+                        var xhr = new XMLHttpRequest();
+                        xhr.open('POST', '{{ url_for('chat_message') }}', true);
+                        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                        
+                        xhr.onload = function() {
+                            if (xhr.status >= 200 && xhr.status < 300) {
+                                // Success
+                                var data = JSON.parse(xhr.responseText);
+                                
+                                // Remove loading indicator
+                                chatMessages.removeChild(loadingElement);
+                                
+                                // Add AI response to chat
+                                var aiResponseElement = document.createElement('div');
+                                aiResponseElement.className = 'chat-message ai';
+                                aiResponseElement.innerHTML = '<div class="message-avatar">AI</div><div class="message-content">' + data.response + '</div>';
+                                chatMessages.appendChild(aiResponseElement);
+                                
+                                // Scroll to bottom
+                                chatMessages.scrollTop = chatMessages.scrollHeight;
+                            } else {
+                                // Error
+                                console.error('Error sending chat message:', xhr.statusText);
+                                
+                                // Remove loading indicator
+                                chatMessages.removeChild(loadingElement);
+                                
+                                // Add error message
+                                var errorElement = document.createElement('div');
+                                errorElement.className = 'chat-message ai';
+                                errorElement.innerHTML = '<div class="message-avatar">AI</div><div class="message-content">Sorry, there was an error processing your request. Please try again.</div>';
+                                chatMessages.appendChild(errorElement);
+                                
+                                // Scroll to bottom
+                                chatMessages.scrollTop = chatMessages.scrollHeight;
+                            }
+                        };
+                        
+                        xhr.onerror = function() {
+                            console.error('Error sending chat message: Network error');
+                            
+                            // Remove loading indicator
+                            chatMessages.removeChild(loadingElement);
+                            
+                            // Add error message
+                            var errorElement = document.createElement('div');
+                            errorElement.className = 'chat-message ai';
+                            errorElement.innerHTML = '<div class="message-avatar">AI</div><div class="message-content">Sorry, there was a network error. Please try again.</div>';
+                            chatMessages.appendChild(errorElement);
+                            
+                            // Scroll to bottom
+                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                        };
+                        
+                        xhr.send(formData);
+                    });
+                </script>
+            </section>
+
+            <!-- Actions Footer -->
+            <section class="section actions-footer">
+                <div class="action-buttons">
+                    <a href="{{ url_for('download_report', data_type=data_type, start_date=start_date, end_date=end_date, coordinates=coordinates, tx_hash=tx_hash) }}" class="action-button primary">Download Report</a>
+                    <a href="{{ url_for('download_image', data_type=data_type, start_date=start_date, end_date=end_date, coordinates=coordinates, tx_hash=tx_hash) }}" class="action-button secondary">Download Image</a>
+                    <button class="action-button secondary" id="share-button">Share Results</button>
+                </div>
+                <div class="transaction-info">
+                    Transaction: {{ tx_hash[:8] }}...
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="main-footer">
+            <p>&copy; 2025 SpaceData • Powered by Flare Network</p>
+        </footer>
+    </div>
+
+    <script>
+        // Initialize blockchain connection
+        async function initBlockchain() {
+            try {
+                // Initialize blockchain
+                await window.FlareServices.initializeBlockchain();
+                console.log('Blockchain initialized');
+                
+                // Get transaction hash from the page
+                const txHash = '{{ tx_hash }}';
+                if (txHash) {
+                    console.log('Transaction hash:', txHash);
+                    
+                    // Update transaction info display
+                    const txInfoElement = document.querySelector('.transaction-info');
+                    if (txInfoElement) {
+                        txInfoElement.innerHTML = 'Transaction: <a href="https://coston2-explorer.flare.network/tx/' + 
+                            txHash + '" target="_blank" title="View on Flare Explorer">' + 
+                            txHash.substring(0, 8) + '...</a>' +
+                            '<div class="blockchain-verification">' +
+                            '<span class="verification-status">✓ Verified on Flare Network</span>' +
+                            '</div>';
+                    }
+                }
+            } catch (error) {
+                console.error('Error initializing blockchain:', error);
+            }
+        }
+        
+        // Share button functionality
+        document.getElementById('share-button').addEventListener('click', function() {
+            // Create share URL
+            const shareUrl = window.location.href;
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(shareUrl)
+                .then(() => alert('Link copied to clipboard!'))
+                .catch(err => console.error('Failed to copy link:', err));
+        });
+        
+        // Initialize blockchain when the page loads
+        document.addEventListener('DOMContentLoaded', initBlockchain);
+    </script>
+</body>
+</html>

@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockchain Integration Test</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Add ethers.js library -->
+    <script src="https://cdn.ethers.org/lib/ethers-5.7.umd.min.js" type="application/javascript"></script>
+    <style>
+        .test-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+        button {
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        #wallet-status {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f0f8ff;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Blockchain Integration Test</h1>
+        <p>Test the blockchain functionality of the Space Data Purchase application</p>
+    </header>
+
+    <main>
+        <div id="wallet-status">
+            <h2>Wallet Status</h2>
+            <p id="connection-status">Not connected</p>
+            <button id="connect-wallet">Connect Wallet</button>
+        </div>
+
+        <div class="test-section">
+            <h3>1. Get Blockchain Config</h3>
+            <p>Test the /api/blockchain/config endpoint</p>
+            <button id="test-config">Test Config</button>
+            <div id="config-result" class="result">Results will appear here...</div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Verify Attestation</h3>
+            <p>Test the /api/blockchain/verify endpoint</p>
+            <button id="test-verify">Test Verify</button>
+            <div id="verify-result" class="result">Results will appear here...</div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. Purchase Data</h3>
+            <p>Test the /api/blockchain/purchase endpoint</p>
+            <button id="test-purchase">Test Purchase</button>
+            <div id="purchase-result" class="result">Results will appear here...</div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. Request Attestation</h3>
+            <p>Test direct interaction with the FDC Hub contract</p>
+            <button id="test-request-attestation">Test Request Attestation</button>
+            <div id="request-attestation-result" class="result">Results will appear here...</div>
+        </div>
+
+        <div class="test-section">
+            <h3>5. Deliver Data</h3>
+            <p>Test direct interaction with the DataPurchase contract</p>
+            <button id="test-deliver-data">Test Deliver Data</button>
+            <div id="deliver-data-result" class="result">Results will appear here...</div>
+        </div>
+    </main>
+
+    <script src="wallet.js"></script>
+    <script src="flare-services.js"></script>
+    <script>
+        // Global variables
+        let walletConnected = false;
+        let walletAddress = null;
+        let requestId = null;
+        let attestationResponse = null;
+        let attestationProof = null;
+
+        // DOM elements
+        const connectWalletBtn = document.getElementById('connect-wallet');
+        const connectionStatus = document.getElementById('connection-status');
+        const testConfigBtn = document.getElementById('test-config');
+        const configResult = document.getElementById('config-result');
+        const testVerifyBtn = document.getElementById('test-verify');
+        const verifyResult = document.getElementById('verify-result');
+        const testPurchaseBtn = document.getElementById('test-purchase');
+        const purchaseResult = document.getElementById('purchase-result');
+        const testRequestAttestationBtn = document.getElementById('test-request-attestation');
+        const requestAttestationResult = document.getElementById('request-attestation-result');
+        const testDeliverDataBtn = document.getElementById('test-deliver-data');
+        const deliverDataResult = document.getElementById('deliver-data-result');
+
+        // Connect wallet button
+        connectWalletBtn.addEventListener('click', async () => {
+            try {
+                const connected = await connectWallet();
+                if (connected) {
+                    walletConnected = true;
+                    walletAddress = await getWalletAddress();
+                    connectionStatus.textContent = `Connected: ${walletAddress}`;
+                    connectionStatus.classList.add('success');
+                    connectWalletBtn.textContent = 'Disconnect';
+                } else {
+                    throw new Error('Failed to connect wallet');
+                }
+            } catch (error) {
+                connectionStatus.textContent = `Error: ${error.message}`;
+                connectionStatus.classList.add('error');
+            }
+        });
+
+        // Test config button
+        testConfigBtn.addEventListener('click', async () => {
+            configResult.textContent = 'Loading...';
+            try {
+                const response = await fetch('/api/blockchain/config');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const data = await response.json();
+                configResult.textContent = JSON.stringify(data, null, 2);
+                configResult.classList.add('success');
+            } catch (error) {
+                configResult.textContent = `Error: ${error.message}`;
+                configResult.classList.add('error');
+            }
+        });
+
+        // Test verify button
+        testVerifyBtn.addEventListener('click', async () => {
+            verifyResult.textContent = 'Loading...';
+            try {
+                // Generate a mock request ID if we don't have one
+                if (!requestId) {
+                    requestId = `0x${Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('')}`;
+                }
+                
+                const response = await fetch('/api/blockchain/verify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ requestId })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                verifyResult.textContent = JSON.stringify(data, null, 2);
+                verifyResult.classList.add('success');
+                
+                // Save attestation data for later use
+                attestationResponse = data.attestationResponse;
+                attestationProof = data.proof;
+            } catch (error) {
+                verifyResult.textContent = `Error: ${error.message}`;
+                verifyResult.classList.add('error');
+            }
+        });
+
+        // Test purchase button
+        testPurchaseBtn.addEventListener('click', async () => {
+            purchaseResult.textContent = 'Loading...';
+            try {
+                if (!walletConnected) {
+                    throw new Error('Wallet not connected');
+                }
+                
+                // First try the API endpoint (for backward compatibility)
+                try {
+                    // Create mock purchase data
+                    const purchaseRequestData = {
+                        dataType: 'satellite.observation',
+                        coordinates: {
+                            type: 'Polygon',
+                            coordinates: [
+                                [
+                                    [12.5, 41.9],
+                                    [12.6, 41.9],
+                                    [12.6, 42.0],
+                                    [12.5, 42.0],
+                                    [12.5, 41.9]
+                                ]
+                            ]
+                        },
+                        startDate: '2023-04-01',
+                        endDate: '2023-04-30',
+                        price: 0.01
+                    };
+                    
+                    const response = await fetch('/api/blockchain/purchase', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(purchaseRequestData)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Save request ID for later use
+                    requestId = data.requestId;
+                    
+                    // Now make the actual blockchain transaction
+                    purchaseResult.textContent = 'API call successful. Now making blockchain transaction...';
+                    
+                    // Check if purchaseData function is available
+                    if (typeof window.purchaseData !== 'function') {
+                        throw new Error('purchaseData function not available');
+                    }
+                    
+                    // Make the actual blockchain transaction
+                    const result = await window.purchaseData(requestId, 0.01);
+                    
+                    if (result.success) {
+                        // Combine the results
+                        const combinedResult = {
+                            apiResult: data,
+                            blockchainResult: result,
+                            message: 'Successfully purchased data on the blockchain'
+                        };
+                        
+                        purchaseResult.textContent = JSON.stringify(combinedResult, null, 2);
+                        purchaseResult.classList.add('success');
+                    } else {
+                        throw new Error(result.error || 'Failed to purchase data on the blockchain');
+                    }
+                } catch (apiError) {
+                    console.warn('API purchase failed, trying direct blockchain transaction:', apiError);
+                    
+                    // Generate a request ID
+                    requestId = `0x${Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('')}`;
+                    
+                    // Make the blockchain transaction directly
+                    const result = await window.purchaseData(requestId, 0.01);
+                    
+                    if (result.success) {
+                        purchaseResult.textContent = JSON.stringify(result, null, 2);
+                        purchaseResult.classList.add('success');
+                    } else {
+                        throw new Error(result.error || 'Failed to purchase data on the blockchain');
+                    }
+                }
+            } catch (error) {
+                purchaseResult.textContent = `Error: ${error.message}`;
+                purchaseResult.classList.add('error');
+            }
+        });
+
+        // Test request attestation button
+        testRequestAttestationBtn.addEventListener('click', async () => {
+            requestAttestationResult.textContent = 'Loading...';
+            try {
+                if (!walletConnected) {
+                    throw new Error('Wallet not connected');
+                }
+                
+                // Check if flareServices is available
+                if (typeof requestAttestation !== 'function') {
+                    throw new Error('flareServices not loaded');
+                }
+                
+                const attestationType = 'satellite.observation';
+                const parameters = 'Copernicus-L2A-Hash-Test';
+                
+                const result = await requestAttestation(attestationType, parameters);
+                requestAttestationResult.textContent = JSON.stringify(result, null, 2);
+                requestAttestationResult.classList.add('success');
+                
+                // Save request ID for later use
+                if (result.requestId) {
+                    requestId = result.requestId;
+                }
+            } catch (error) {
+                requestAttestationResult.textContent = `Error: ${error.message}`;
+                requestAttestationResult.classList.add('error');
+            }
+        });
+
+        // Test deliver data button
+        testDeliverDataBtn.addEventListener('click', async () => {
+            deliverDataResult.textContent = 'Loading...';
+            try {
+                if (!walletConnected) {
+                    throw new Error('Wallet not connected');
+                }
+                
+                if (!requestId) {
+                    throw new Error('No request ID available');
+                }
+                
+                if (!attestationResponse || !attestationProof) {
+                    throw new Error('No attestation data available');
+                }
+                
+                // Check if flareServices is available
+                if (typeof deliverData !== 'function') {
+                    throw new Error('flareServices not loaded');
+                }
+                
+                const result = await deliverData(requestId, attestationResponse, attestationProof);
+                deliverDataResult.textContent = JSON.stringify(result, null, 2);
+                deliverDataResult.classList.add('success');
+            } catch (error) {
+                deliverDataResult.textContent = `Error: ${error.message}`;
+                deliverDataResult.classList.add('error');
+            }
+        });
+
+        // Check if wallet is already connected
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const connected = await checkWalletConnection();
+                if (connected) {
+                    walletConnected = true;
+                    walletAddress = await getWalletAddress();
+                    connectionStatus.textContent = `Connected: ${walletAddress}`;
+                    connectionStatus.classList.add('success');
+                    connectWalletBtn.textContent = 'Disconnect';
+                }
+            } catch (error) {
+                console.error('Error checking wallet connection:', error);
+            }
+        });
+    </script>
+</body>
+</html>

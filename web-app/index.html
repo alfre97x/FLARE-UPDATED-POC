@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpaceData - Earth Observation Made Simple</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Add ethers.js for blockchain interactions -->
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js" type="application/javascript"></script>
+    
+    <!-- Application scripts -->
+    <script src="metamask-connection.js"></script>
+    <script src="flare-services.js"></script>
+    <script src="wallet.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="logo">
+                <div class="logo-circle"></div>
+                <h1>SpaceData</h1>
+            </div>
+            <div class="header-nav">
+                <a href="#" class="sign-in-link">Sign In</a>
+            </div>
+        </header>
+
+        <main>
+            <!-- AI Assistant Section -->
+            <section class="section ai-section">
+                <div class="ai-assistant-container">
+                    <h3 class="ai-assistant-title">Ask our AI Assistant</h3>
+                    <div class="ai-assistant-input-container">
+                        <input type="text" class="ai-assistant-input" id="ai-assistant-input" placeholder="What type of satellite imagery do you need?" />
+                        <button class="ai-assistant-button" id="ai-assistant-button">
+                            <span class="ai-assistant-button-text">→</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Hero Section -->
+            <section class="section hero-section">
+                <div class="hero-content">
+                    <h2 class="hero-title">Earth Observation</h2>
+                    <h2 class="hero-title">Made Simple</h2>
+                    <p class="hero-subtitle">Satellite data powered by Flare blockchain and AI</p>
+                </div>
+                
+                <!-- Earth Visualization -->
+                <div class="earth-visualization">
+                    <div class="earth-circle">
+                        <div class="continent continent-1"></div>
+                        <div class="continent continent-2"></div>
+                    </div>
+                </div>
+                
+                <!-- Connect Wallet Button -->
+                <div class="connect-wallet-container">
+                    <button class="button" id="connect-wallet-btn">Connect Wallet</button>
+                </div>
+            </section>
+
+            <!-- Available Services Section -->
+            <section class="section services-section">
+                <h2 class="section-title">Available Services</h2>
+                
+                <div class="services-grid">
+                    <!-- Service Card 1 -->
+                    <div class="service-card">
+                        <div class="service-card-image">
+                            <div class="city-grid"></div>
+                        </div>
+                        <h3 class="service-card-title">Urban Monitoring</h3>
+                        <p class="service-card-description">High-resolution imagery for urban development and infrastructure analysis</p>
+                        <div class="service-card-action">
+                            <a href="/web-app/data-selection.html" class="service-explore-link">Explore</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Service Card 2 -->
+                    <div class="service-card">
+                        <div class="service-card-image">
+                            <div class="agriculture-grid"></div>
+                        </div>
+                        <h3 class="service-card-title">Agricultural Insights</h3>
+                        <p class="service-card-description">Monitor crop health and land use with AI-enhanced analysis</p>
+                        <div class="service-card-action">
+                            <a href="/web-app/data-selection.html" class="service-explore-link">Explore</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Service Card 3 -->
+                    <div class="service-card">
+                        <div class="service-card-image">
+                            <div class="coastal-area"></div>
+                        </div>
+                        <h3 class="service-card-title">Coastal Monitoring</h3>
+                        <p class="service-card-description">Track coastline changes and water quality with precision</p>
+                        <div class="service-card-action">
+                            <a href="/web-app/data-selection.html" class="service-explore-link">Explore</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- How It Works Section -->
+            <section class="section how-it-works-section">
+                <h2 class="section-title">How It Works</h2>
+                
+                <div class="steps-grid">
+                    <div class="step">
+                        <p class="step-text">1. Connect your Flare wallet</p>
+                    </div>
+                    <div class="step">
+                        <p class="step-text">2. Select the satellite data you need</p>
+                    </div>
+                    <div class="step">
+                        <p class="step-text">3. Pay with cryptocurrency via Flare blockchain</p>
+                    </div>
+                    <div class="step">
+                        <p class="step-text">4. Access your data with optional AI analysis</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="main-footer">
+            <p>&copy; 2025 SpaceData • Powered by Flare Network</p>
+        </footer>
+    </div>
+
+    <script>
+        // AI Assistant functionality
+        const aiAssistantInput = document.getElementById('ai-assistant-input');
+        const aiAssistantButton = document.getElementById('ai-assistant-button');
+        
+        // Function to handle AI Assistant query submission
+        function handleAIAssistantSubmit() {
+            const query = aiAssistantInput.value.trim();
+            if (!query) return;
+            
+            // Show loading state
+            const buttonText = aiAssistantButton.querySelector('.ai-assistant-button-text');
+            buttonText.style.display = 'none';
+            
+            // Create and append spinner
+            const spinner = document.createElement('div');
+            spinner.className = 'ai-assistant-spinner';
+            aiAssistantButton.appendChild(spinner);
+            
+            // Disable input and button during processing
+            aiAssistantInput.disabled = true;
+            aiAssistantButton.disabled = true;
+            
+            // Simulate AI processing (in a real app, this would be an API call)
+            setTimeout(() => {
+                // Remove spinner and restore button text
+                spinner.remove();
+                buttonText.style.display = 'block';
+                
+                // Re-enable input and button
+                aiAssistantInput.disabled = false;
+                aiAssistantButton.disabled = false;
+                
+                // Clear input
+                aiAssistantInput.value = '';
+                
+                // Navigate to the data selection screen
+                window.location.href = '/web-app/data-selection.html';
+            }, 1500);
+        }
+        
+        // Event listeners for AI Assistant
+        aiAssistantButton.addEventListener('click', handleAIAssistantSubmit);
+        aiAssistantInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleAIAssistantSubmit();
+            }
+        });
+        
+        // Connect wallet button functionality is now handled in wallet.js
+        
+        // Service card explore links - direct navigation through href
+        // No need to prevent default behavior anymore
+    </script>
+</body>
+</html>

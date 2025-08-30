@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockchain Integration Test</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .card {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .btn:hover {
+            background-color: #0069d9;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+        }
+        
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        
+        .result {
+            background-color: #f1f1f1;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        
+        .error {
+            color: #dc3545;
+        }
+        
+        .success {
+            color: #28a745;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Blockchain Integration Test</h1>
+        
+        <div class="card">
+            <h2>Connection</h2>
+            <button id="connectBtn" class="btn">Connect to MetaMask</button>
+            <div id="connectionResult" class="result"></div>
+        </div>
+        
+        <div class="card">
+            <h2>Contract Configuration</h2>
+            <button id="getConfigBtn" class="btn">Get Contract Configuration</button>
+            <div id="configResult" class="result"></div>
+        </div>
+        
+        <div class="card">
+            <h2>Generate Request ID</h2>
+            <div class="form-group">
+                <label for="dataInfo">Data Info (JSON):</label>
+                <textarea id="dataInfo" rows="5">
+{
+    "coordinates": [48.8566, 2.3522],
+    "startDate": "2023-04-15",
+    "endDate": "2023-04-22",
+    "dataType": "S2MSI2A"
+}
+                </textarea>
+            </div>
+            <button id="generateRequestIdBtn" class="btn">Generate Request ID</button>
+            <div id="requestIdResult" class="result"></div>
+        </div>
+        
+        <div class="card">
+            <h2>Purchase Data</h2>
+            <div class="form-group">
+                <label for="requestId">Request ID:</label>
+                <input type="text" id="requestId" placeholder="0x...">
+            </div>
+            <div class="form-group">
+                <label for="amount">Amount (ETH):</label>
+                <input type="text" id="amount" value="0.01">
+            </div>
+            <button id="purchaseBtn" class="btn">Purchase Data</button>
+            <div id="purchaseResult" class="result"></div>
+        </div>
+        
+        <div class="card">
+            <h2>Request Attestation</h2>
+            <div class="form-group">
+                <label for="attestationType">Attestation Type:</label>
+                <input type="text" id="attestationType" value="satellite.observation">
+            </div>
+            <div class="form-group">
+                <label for="parameters">Parameters:</label>
+                <input type="text" id="parameters" value="Copernicus-L2A-Hash">
+            </div>
+            <button id="requestAttestationBtn" class="btn">Request Attestation</button>
+            <div id="attestationResult" class="result"></div>
+        </div>
+        
+        <div class="card">
+            <h2>Fetch Attestation Result</h2>
+            <div class="form-group">
+                <label for="fetchRequestId">Request ID:</label>
+                <input type="text" id="fetchRequestId" placeholder="0x...">
+            </div>
+            <button id="fetchAttestationBtn" class="btn">Fetch Attestation</button>
+            <div id="fetchResult" class="result"></div>
+        </div>
+        
+        <div class="card">
+            <h2>Verify Attestation</h2>
+            <div class="form-group">
+                <label for="verifyRequestId">Request ID:</label>
+                <input type="text" id="verifyRequestId" placeholder="0x...">
+            </div>
+            <div class="form-group">
+                <label for="attestationResponse">Attestation Response:</label>
+                <input type="text" id="attestationResponse" placeholder="0x...">
+            </div>
+            <div class="form-group">
+                <label for="proof">Proof:</label>
+                <input type="text" id="proof" placeholder="0x...">
+            </div>
+            <button id="verifyAttestationBtn" class="btn">Verify Attestation</button>
+            <div id="verifyResult" class="result"></div>
+        </div>
+        
+        <div class="card">
+            <h2>Deliver Data</h2>
+            <div class="form-group">
+                <label for="deliverRequestId">Request ID:</label>
+                <input type="text" id="deliverRequestId" placeholder="0x...">
+            </div>
+            <div class="form-group">
+                <label for="deliverAttestationResponse">Attestation Response:</label>
+                <input type="text" id="deliverAttestationResponse" placeholder="0x...">
+            </div>
+            <div class="form-group">
+                <label for="deliverProof">Proof:</label>
+                <input type="text" id="deliverProof" placeholder="0x...">
+            </div>
+            <button id="deliverDataBtn" class="btn">Deliver Data</button>
+            <div id="deliverResult" class="result"></div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
+    <script src="/static/js/flare-services.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Connect to MetaMask
+            document.getElementById('connectBtn').addEventListener('click', async function() {
+                try {
+                    document.getElementById('connectionResult').innerHTML = `
+                        <span>Connecting to MetaMask...</span>
+                    `;
+                    
+                    await FlareServices.initializeBlockchain();
+                    const account = FlareServices.getCurrentAccount();
+                    
+                    document.getElementById('connectionResult').innerHTML = `
+                        <span class="success">Connected successfully!</span>
+                        <p>Account: ${account}</p>
+                    `;
+                    
+                    // Also fetch and display contract configuration
+                    try {
+                        const response = await fetch('/api/blockchain/config');
+                        const config = await response.json();
+                        document.getElementById('configResult').innerHTML = `
+                            <pre>${JSON.stringify(config, null, 2)}</pre>
+                        `;
+                    } catch (configError) {
+                        console.error('Error fetching config:', configError);
+                    }
+                } catch (error) {
+                    console.error('Connection error:', error);
+                    document.getElementById('connectionResult').innerHTML = `
+                        <span class="error">Error: ${error.message}</span>
+                    `;
+                }
+            });
+            
+            // Get Contract Configuration
+            document.getElementById('getConfigBtn').addEventListener('click', async function() {
+                try {
+                    const response = await fetch('/api/blockchain/config');
+                    const config = await response.json();
+                    document.getElementById('configResult').innerHTML = `
+                        <pre>${JSON.stringify(config, null, 2)}</pre>
+                    `;
+                } catch (error) {
+                    document.getElementById('configResult').innerHTML = `
+                        <span class="error">Error: ${error.message}</span>
+                    `;
+                }
+            });
+            
+            // Generate Request ID
+            document.getElementById('generateRequestIdBtn').addEventListener('click', async function() {
+                try {
+                    const dataInfoStr = document.getElementById('dataInfo').value;
+                    const dataInfo = JSON.parse(dataInfoStr);
+                    
+                    const requestId = await FlareServices.generateRequestId(dataInfo);
+                    document.getElementById('requestIdResult').innerHTML = `
+                        <span class="success">Request ID generated successfully!</span>
+                        <p>Request ID: ${requestId}</p>
+                    `;
+                    
+                    // Auto-fill the request ID fields
+                    document.getElementById('requestId').value = requestId;
+                    document.getElementById('fetchRequestId').value = requestId;
+                    document.getElementById('verifyRequestId').value = requestId;
+                    document.getElementById('deliverRequestId').value = requestId;
+                } catch (error) {
+                    document.getElementById('requestIdResult').innerHTML = `
+                        <span class="error">Error: ${error.message}</span>
+                    `;
+                }
+            });
+            
+            // Purchase Data
+            document.getElementById('purchaseBtn').addEventListener('click', async function() {
+                try {
+                    const requestId = document.getElementById('requestId').value;
+                    const amount = document.getElementById('amount').value;
+                    
+                    if (!requestId) {
+                        throw new Error('Request ID is required');
+                    }
+                    
+                    const receipt = await FlareServices.purchaseData(requestId, amount);
+                    document.getElementById('purchaseResult').innerHTML = `
+                        <span class="success">Data purchased successfully!</span>
+                        <p>Transaction Hash: ${receipt.transactionHash}</p>
+                        <pre>${JSON.stringify(receipt, null, 2)}</pre>
+                    `;
+                } catch (error) {
+                    document.getElementById('purchaseResult').innerHTML = `
+                        <span class="error">Error: ${error.message}</span>
+                    `;
+                }
+            });
+            
+            // Request Attestation
+            document.getElementById('requestAttestationBtn').addEventListener('click', async function() {
+                try {
+                    const attestationType = document.getElementById('attestationType').value;
+                    const parameters = document.getElementById('parameters').value;
+                    
+                    if (!attestationType || !parameters) {
+                        throw new Error('Attestation type and parameters are required');
+                    }
+                    
+                    const result = await FlareServices.requestAttestation(attestationType, parameters);
+                    document.getElementById('attestationResult').innerHTML = `
+                        <span class="success">Attestation requested successfully!</span>
+                        <p>Transaction Hash: ${result.transactionHash}</p>
+                        <p>Request ID: ${result.requestId}</p>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    `;
+                    
+                    // Auto-fill the request ID fields
+                    if (result.requestId) {
+                        document.getElementById('fetchRequestId').value = result.requestId;
+                        document.getElementById('verifyRequestId').value = result.requestId;
+                        document.getElementById('deliverRequestId').value = result.requestId;
+                    }
+                } catch (error) {
+                    document.getElementById('attestationResult').innerHTML = `
+                        <span class="error">Error: ${error.message}</span>
+                    `;
+                }
+            });
+            
+            // Fetch Attestation Result
+            document.getElementById('fetchAttestationBtn').addEventListener('click', async function() {
+                try {
+                    const requestId = document.getElementById('fetchRequestId').value;
+                    
+                    if (!requestId) {
+                        throw new Error('Request ID is required');
+                    }
+                    
+                    const result = await FlareServices.fetchAttestationResult(requestId);
+                    document.getElementById('fetchResult').innerHTML = `
+                        <span class="success">Attestation result fetched successfully!</span>
+                        <p>Attestation Response: ${result.attestationResponse}</p>
+                        <p>Proof: ${result.proof}</p>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    `;
+                    
+                    // Auto-fill the attestation response and proof fields
+                    if (result.attestationResponse) {
+                        document.getElementById('attestationResponse').value = result.attestationResponse;
+                        document.getElementById('deliverAttestationResponse').value = result.attestationResponse;
+                    }
+                    
+                    if (result.proof) {
+                        document.getElementById('proof').value = result.proof;
+                        document.getElementById('deliverProof').value = result.proof;
+                    }
+                } catch (error) {
+                    document.getElementById('fetchResult').innerHTML = `
+                        <span class="error">Error: ${error.message}</span>
+                    `;
+                }
+            });
+            
+            // Verify Attestation
+            document.getElementById('verifyAttestationBtn').addEventListener('click', async function() {
+                try {
+                    const requestId = document.getElementById('verifyRequestId').value;
+                    const attestationResponse = document.getElementById('attestationResponse').value;
+                    const proof = document.getElementById('proof').value;
+                    
+                    if (!requestId || !attestationResponse || !proof) {
+                        throw new Error('Request ID, attestation response, and proof are required');
+                    }
+                    
+                    const verified = await FlareServices.verifyAttestation(requestId, attestationResponse, proof);
+                    document.getElementById('verifyResult').innerHTML = `
+                        <span class="success">Attestation verification completed!</span>
+                        <p>Verified: ${verified ? 'Yes' : 'No'}</p>
+                    `;
+                } catch (error) {
+                    document.getElementById('verifyResult').innerHTML = `
+                        <span class="error">Error: ${error.message}</span>
+                    `;
+                }
+            });
+            
+            // Deliver Data
+            document.getElementById('deliverDataBtn').addEventListener('click', async function() {
+                try {
+                    const requestId = document.getElementById('deliverRequestId').value;
+                    const attestationResponse = document.getElementById('deliverAttestationResponse').value;
+                    const proof = document.getElementById('deliverProof').value;
+                    
+                    if (!requestId || !attestationResponse || !proof) {
+                        throw new Error('Request ID, attestation response, and proof are required');
+                    }
+                    
+                    const result = await FlareServices.deliverData(requestId, attestationResponse, proof);
+                    document.getElementById('deliverResult').innerHTML = `
+                        <span class="success">Data delivered successfully!</span>
+                        <p>Transaction Hash: ${result.transactionHash}</p>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    `;
+                } catch (error) {
+                    document.getElementById('deliverResult').innerHTML = `
+                        <span class="error">Error: ${error.message}</span>
+                    `;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetaMask Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #FF6B6B;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        button:hover {
+            background-color: #e05c5c;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+        pre {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .status-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .status-connected {
+            background-color: green;
+        }
+        .status-disconnected {
+            background-color: red;
+        }
+        .status-connecting {
+            background-color: orange;
+        }
+        .status-error {
+            background-color: purple;
+        }
+        .status-not-installed {
+            background-color: gray;
+        }
+    </style>
+</head>
+<body>
+    <h1>MetaMask Connection Manager Test</h1>
+    
+    <div>
+        <h2>Connection Status</h2>
+        <div class="status-container">
+            <div id="connection-status-indicator" class="status-indicator status-disconnected"></div>
+            <div id="connection-status">Disconnected</div>
+        </div>
+        <div class="status-container">
+            <div id="network-status-indicator" class="status-indicator status-disconnected"></div>
+            <div id="network-status">Unknown Network</div>
+        </div>
+    </div>
+    
+    <div>
+        <h2>Connection Controls</h2>
+        <button id="connect-button">Connect to MetaMask</button>
+        <button id="disconnect-button">Disconnect</button>
+        <button id="switch-network-button">Switch to Flare Network</button>
+    </div>
+    
+    <div>
+        <h2>Transaction Test</h2>
+        <button id="send-transaction-button">Send Test Transaction</button>
+        <div id="transaction-result" class="result">
+            <p>Transaction result will appear here...</p>
+        </div>
+    </div>
+    
+    <div>
+        <h2>Connection State</h2>
+        <div id="connection-state" class="result">
+            <p>Connection state will appear here...</p>
+        </div>
+    </div>
+    
+    <!-- Load MetaMask Connection Manager -->
+    <script src="metamask-connection.js"></script>
+    
+    <script>
+        // Elements
+        const connectionStatusIndicator = document.getElementById('connection-status-indicator');
+        const connectionStatus = document.getElementById('connection-status');
+        const networkStatusIndicator = document.getElementById('network-status-indicator');
+        const networkStatus = document.getElementById('network-status');
+        const connectButton = document.getElementById('connect-button');
+        const disconnectButton = document.getElementById('disconnect-button');
+        const switchNetworkButton = document.getElementById('switch-network-button');
+        const sendTransactionButton = document.getElementById('send-transaction-button');
+        const transactionResult = document.getElementById('transaction-result');
+        const connectionState = document.getElementById('connection-state');
+        
+        // Update connection status display
+        function updateConnectionStatus() {
+            if (!window.metamaskManager) {
+                connectionStatusIndicator.className = 'status-indicator status-error';
+                connectionStatus.textContent = 'MetaMask Connection Manager not loaded';
+                return;
+            }
+            
+            const state = window.metamaskManager.getState();
+            
+            // Update connection state display
+            connectionState.innerHTML = `<pre>${JSON.stringify(state, null, 2)}</pre>`;
+            
+            // Update connection status
+            switch (state.connectionState) {
+                case 'CONNECTED':
+                    connectionStatusIndicator.className = 'status-indicator status-connected';
+                    connectionStatus.textContent = `Connected: ${state.account}`;
+                    break;
+                case 'DISCONNECTED':
+                    connectionStatusIndicator.className = 'status-indicator status-disconnected';
+                    connectionStatus.textContent = 'Disconnected';
+                    break;
+                case 'CONNECTING':
+                    connectionStatusIndicator.className = 'status-indicator status-connecting';
+                    connectionStatus.textContent = 'Connecting...';
+                    break;
+                case 'ERROR':
+                    connectionStatusIndicator.className = 'status-indicator status-error';
+                    connectionStatus.textContent = `Error: ${state.error}`;
+                    break;
+                case 'NOT_INSTALLED':
+                    connectionStatusIndicator.className = 'status-indicator status-not-installed';
+                    connectionStatus.textContent = 'MetaMask not installed';
+                    break;
+                default:
+                    connectionStatusIndicator.className = 'status-indicator status-disconnected';
+                    connectionStatus.textContent = 'Unknown state';
+            }
+            
+            // Update network status
+            switch (state.networkState) {
+                case 'CORRECT_NETWORK':
+                    networkStatusIndicator.className = 'status-indicator status-connected';
+                    networkStatus.textContent = 'Connected to Flare Coston2 Testnet';
+                    break;
+                case 'WRONG_NETWORK':
+                    networkStatusIndicator.className = 'status-indicator status-error';
+                    networkStatus.textContent = 'Connected to wrong network';
+                    break;
+                case 'SWITCHING':
+                    networkStatusIndicator.className = 'status-indicator status-connecting';
+                    networkStatus.textContent = 'Switching network...';
+                    break;
+                case 'UNKNOWN':
+                default:
+                    networkStatusIndicator.className = 'status-indicator status-disconnected';
+                    networkStatus.textContent = 'Unknown Network';
+            }
+        }
+        
+        // Connect to MetaMask
+        async function connect() {
+            try {
+                const success = await window.metamaskManager.connect();
+                console.log('Connection result:', success);
+                updateConnectionStatus();
+            } catch (error) {
+                console.error('Error connecting to MetaMask:', error);
+                transactionResult.innerHTML = `<p class="error">Error connecting to MetaMask: ${error.message}</p>`;
+            }
+        }
+        
+        // Disconnect from MetaMask
+        function disconnect() {
+            try {
+                window.metamaskManager.disconnect();
+                updateConnectionStatus();
+            } catch (error) {
+                console.error('Error disconnecting from MetaMask:', error);
+                transactionResult.innerHTML = `<p class="error">Error disconnecting from MetaMask: ${error.message}</p>`;
+            }
+        }
+        
+        // Switch to Flare Network
+        async function switchToFlareNetwork() {
+            try {
+                const success = await window.metamaskManager.switchToRequiredNetwork();
+                console.log('Network switch result:', success);
+                updateConnectionStatus();
+            } catch (error) {
+                console.error('Error switching network:', error);
+                transactionResult.innerHTML = `<p class="error">Error switching network: ${error.message}</p>`;
+            }
+        }
+        
+        // Send a test transaction
+        async function sendTestTransaction() {
+            try {
+                // Check if connected
+                if (window.metamaskManager.state.connectionState !== 'CONNECTED') {
+                    transactionResult.innerHTML = `<p class="error">Not connected to MetaMask</p>`;
+                    return;
+                }
+                
+                // Create a simple transaction (sending 0 ETH to yourself)
+                const account = window.metamaskManager.state.account;
+                
+                transactionResult.innerHTML = `<p>Preparing transaction...</p>`;
+                
+                const transactionParameters = {
+                    to: account, // Sending to yourself
+                    value: '0x0', // 0 ETH
+                    gas: '0x5208', // 21000 gas
+                };
+                
+                transactionResult.innerHTML += `<pre>${JSON.stringify(transactionParameters, null, 2)}</pre>`;
+                
+                transactionResult.innerHTML += `<p>Sending transaction...</p>`;
+                
+                const txHash = await window.metamaskManager.sendTransaction(transactionParameters);
+                
+                transactionResult.innerHTML = `<p class="success">Transaction sent! Hash: ${txHash}</p>`;
+                
+                // Add block explorer link
+                const blockExplorerUrl = window.MetaMaskConnectionManager.FLARE_NETWORK_PARAMS.blockExplorerUrls[0];
+                transactionResult.innerHTML += `<p><a href="${blockExplorerUrl}/tx/${txHash}" target="_blank">View on Block Explorer</a></p>`;
+            } catch (error) {
+                console.error('Error sending transaction:', error);
+                transactionResult.innerHTML = `<p class="error">Error sending transaction: ${error.message}</p>`;
+            }
+        }
+        
+        // Set up event listeners
+        connectButton.addEventListener('click', connect);
+        disconnectButton.addEventListener('click', disconnect);
+        switchNetworkButton.addEventListener('click', switchToFlareNetwork);
+        sendTransactionButton.addEventListener('click', sendTestTransaction);
+        
+        // Set up MetaMask event listeners
+        if (window.metamaskManager) {
+            window.metamaskManager.on('onConnectionStateChanged', (state) => {
+                console.log('Connection state changed:', state);
+                updateConnectionStatus();
+            });
+            
+            window.metamaskManager.on('onNetworkStateChanged', (networkState) => {
+                console.log('Network state changed:', networkState);
+                updateConnectionStatus();
+            });
+            
+            window.metamaskManager.on('onAccountChanged', (account) => {
+                console.log('Account changed:', account);
+                updateConnectionStatus();
+            });
+            
+            window.metamaskManager.on('onError', (error) => {
+                console.error('MetaMask error:', error);
+                transactionResult.innerHTML = `<p class="error">MetaMask error: ${error.message}</p>`;
+                updateConnectionStatus();
+            });
+        }
+        
+        // Initialize
+        updateConnectionStatus();
+    </script>
+</body>
+</html>

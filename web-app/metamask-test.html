@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetaMask Detection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        button {
+            background-color: #FF6B6B;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        button:hover {
+            background-color: #FF5252;
+        }
+        #status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f8f8f8;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+        pre {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>MetaMask Detection Test</h1>
+    
+    <div id="status">Checking for MetaMask...</div>
+    
+    <button id="check-metamask">Check MetaMask</button>
+    <button id="connect-wallet">Connect Wallet</button>
+    <button id="add-network">Add Coston Testnet</button>
+    <button id="switch-network">Switch to Coston Testnet</button>
+    
+    <h2>Console Output</h2>
+    <pre id="console-output"></pre>
+    
+    <script>
+        // Flare Network configuration (Coston Testnet)
+        const FLARE_NETWORK_PARAMS = {
+            chainId: '0x10', // Chain ID for Coston Testnet (16 in decimal)
+            chainName: 'Coston Testnet',
+            nativeCurrency: {
+                name: 'Coston Flare',
+                symbol: 'CFLR',
+                decimals: 18
+            },
+            rpcUrls: ['https://coston-api.flare.network/ext/C/rpc'],
+            blockExplorerUrls: ['https://coston-explorer.flare.network']
+        };
+        
+        // Elements
+        const statusEl = document.getElementById('status');
+        const consoleOutputEl = document.getElementById('console-output');
+        const checkMetaMaskBtn = document.getElementById('check-metamask');
+        const connectWalletBtn = document.getElementById('connect-wallet');
+        const addNetworkBtn = document.getElementById('add-network');
+        const switchNetworkBtn = document.getElementById('switch-network');
+        
+        // Log function
+        function log(message, isError = false) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logMessage = `[${timestamp}] ${message}`;
+            console.log(logMessage);
+            
+            consoleOutputEl.textContent += logMessage + '\n';
+            
+            if (isError) {
+                statusEl.innerHTML = `<span class="error">${message}</span>`;
+            } else {
+                statusEl.innerHTML = `<span class="success">${message}</span>`;
+            }
+        }
+        
+        // Check if MetaMask is installed
+        function checkMetaMask() {
+            log('Checking for MetaMask...');
+            
+            if (typeof window.ethereum !== 'undefined') {
+                log(`window.ethereum exists: ${typeof window.ethereum}`);
+                
+                if (window.ethereum.isMetaMask) {
+                    log('MetaMask is installed! ✓');
+                    return true;
+                } else {
+                    log('window.ethereum exists but isMetaMask is false', true);
+                    return false;
+                }
+            } else {
+                log('window.ethereum is undefined. MetaMask is not installed.', true);
+                return false;
+            }
+        }
+        
+        // Connect to MetaMask
+        async function connectWallet() {
+            log('Attempting to connect to MetaMask...');
+            
+            if (typeof window.ethereum === 'undefined') {
+                log('MetaMask is not installed. Please install MetaMask first.', true);
+                return false;
+            }
+            
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                log(`Connected to account: ${accounts[0]} ✓`);
+                return true;
+            } catch (error) {
+                log(`Error connecting to MetaMask: ${error.message}`, true);
+                return false;
+            }
+        }
+        
+        // Add Coston Testnet to MetaMask
+        async function addNetwork() {
+            log('Attempting to add Coston Testnet to MetaMask...');
+            
+            if (typeof window.ethereum === 'undefined') {
+                log('MetaMask is not installed. Please install MetaMask first.', true);
+                return false;
+            }
+            
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_addEthereumChain',
+                    params: [FLARE_NETWORK_PARAMS]
+                });
+                log('Coston Testnet added to MetaMask ✓');
+                return true;
+            } catch (error) {
+                log(`Error adding Coston Testnet: ${error.message}`, true);
+                return false;
+            }
+        }
+        
+        // Switch to Coston Testnet
+        async function switchNetwork() {
+            log('Attempting to switch to Coston Testnet...');
+            
+            if (typeof window.ethereum === 'undefined') {
+                log('MetaMask is not installed. Please install MetaMask first.', true);
+                return false;
+            }
+            
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: FLARE_NETWORK_PARAMS.chainId }]
+                });
+                log('Switched to Coston Testnet ✓');
+                return true;
+            } catch (error) {
+                // If the error code is 4902, the chain hasn't been added to MetaMask
+                if (error.code === 4902) {
+                    log('Coston Testnet not found in MetaMask. Attempting to add it...');
+                    return await addNetwork();
+                }
+                log(`Error switching to Coston Testnet: ${error.message}`, true);
+                return false;
+            }
+        }
+        
+        // Event listeners
+        checkMetaMaskBtn.addEventListener('click', checkMetaMask);
+        connectWalletBtn.addEventListener('click', connectWallet);
+        addNetworkBtn.addEventListener('click', addNetwork);
+        switchNetworkBtn.addEventListener('click', switchNetwork);
+        
+        // Initial check
+        window.addEventListener('DOMContentLoaded', checkMetaMask);
+    </script>
+</body>
+</html>

@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpaceData - Select Satellite Data</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-geometryutil"></script>
+    
+    <!-- Add Web3.js for blockchain interactions -->
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
+    
+    <!-- Application scripts -->
+    <script src="{{ url_for('static', filename='js/wallet.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/flare-services.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/flare-vrf.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/pricing.js') }}"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="logo">
+                <div class="logo-circle"></div>
+                <h1>SpaceData</h1>
+            </div>
+            <div class="header-nav">
+                <button id="connect-wallet-btn" class="wallet-button">Connect Wallet</button>
+            </div>
+        </header>
+
+        <main>
+            <!-- Back Button and Page Title -->
+            <div class="page-header">
+                <a href="{{ url_for('index') }}" class="back-button">
+                    <span class="back-arrow">←</span>
+                    <span>Back</span>
+                </a>
+                <div class="page-title-container">
+                    <h2 class="page-title">Select Satellite Data</h2>
+                    <p class="step-indicator">Step 1 of 3 • Data Selection</p>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <form action="{{ url_for('process_selection') }}" method="POST" id="data-selection-form">
+                <section class="section data-selection-content">
+                    <!-- Data Type Section -->
+                    <div class="selection-section">
+                        <h3 class="selection-section-title">Data Type</h3>
+                        <div class="data-type-cards">
+                            <div class="data-type-card selected">
+                                <input type="radio" name="dataType" value="S2MSI2A" id="data-type-s2" checked style="display: none;">
+                                <label for="data-type-s2">
+                                    <h4 class="data-type-card-title">Sentinel-2 Level 2A</h4>
+                                    <p class="data-type-card-description">Multispectral imagery with atmospheric correction</p>
+                                    <p class="data-type-card-resolution">Resolution: 10m</p>
+                                </label>
+                            </div>
+                            <div class="data-type-card">
+                                <input type="radio" name="dataType" value="S1GRD" id="data-type-s1" style="display: none;">
+                                <label for="data-type-s1">
+                                    <h4 class="data-type-card-title">Sentinel-1 SAR</h4>
+                                    <p class="data-type-card-description">Synthetic Aperture Radar imagery</p>
+                                    <p class="data-type-card-resolution">Resolution: 5-20m</p>
+                                </label>
+                            </div>
+                            <div class="data-type-card">
+                                <input type="radio" name="dataType" value="S3OLCI" id="data-type-s3" style="display: none;">
+                                <label for="data-type-s3">
+                                    <h4 class="data-type-card-title">Sentinel-3 OLCI</h4>
+                                    <p class="data-type-card-description">Ocean and Land Color Instrument</p>
+                                    <p class="data-type-card-resolution">Resolution: 300m</p>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Geographic Area Section -->
+                    <div class="selection-section">
+                        <h3 class="selection-section-title">Geographic Area</h3>
+                        <p class="selection-section-description">Tap to add points and define your area of interest</p>
+                        
+                        <!-- Search Bar -->
+                        <div class="location-search-container">
+                            <input type="text" class="location-search-input" id="location-search-input" placeholder="Search for a location...">
+                            <button type="button" class="location-search-button" id="location-search-button">
+                                <span class="location-search-icon">+</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Map Container -->
+                        <div id="selection-map" class="selection-map-container"></div>
+                        
+                        <!-- Hidden input to store coordinates -->
+                        <input type="hidden" name="coordinates" id="coordinates-input">
+                    </div>
+
+                    <!-- Date Range Section -->
+                    <div class="selection-section">
+                        <h3 class="selection-section-title">Date Range</h3>
+                        <div class="date-range-inputs">
+                            <div class="date-input-container">
+                                <label for="start-date" class="date-input-label">Start Date</label>
+                                <input type="date" id="start-date" name="startDate" class="date-input" value="2023-04-15">
+                            </div>
+                            <div class="date-input-container">
+                                <label for="end-date" class="date-input-label">End Date</label>
+                                <input type="date" id="end-date" name="endDate" class="date-input" value="2023-04-22">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Analysis Option -->
+                    <div class="selection-section">
+                        <h3 class="selection-section-title">AI Analysis</h3>
+                        <div class="ai-toggle-container">
+                            <label class="toggle-switch">
+                                <input type="checkbox" name="aiAnalysis" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span class="toggle-label">AI Analysis Enabled</span>
+                        </div>
+                        <p class="selection-section-description">AI will automatically analyze land cover, detect changes, and generate insights.</p>
+                    </div>
+
+                    <!-- Price Estimate Section -->
+                    <div class="price-estimate-container">
+                        <h3 class="price-estimate-title">Estimated Price</h3>
+                        <p class="price-estimate-amount" id="price-estimate">15.75 FLR</p>
+                        <p class="area-size-display">Area: 1.00 sq km</p>
+                        <p class="price-estimate-note">Final price will include a ±10% random variance determined by smart contract</p>
+                    </div>
+
+                    <!-- Proceed Button -->
+                    <div class="proceed-button-container">
+                        <button type="submit" class="button proceed-button">Proceed to Results</button>
+                    </div>
+                </section>
+            </form>
+        </main>
+
+        <!-- Footer -->
+        <footer class="main-footer">
+            <p>&copy; 2025 SpaceData • Powered by Flare Network</p>
+        </footer>
+    </div>
+
+    <script>
+        // Initialize map
+        var selectionMap = L.map('selection-map').setView([41.9028, 12.4964], 6); // Rome, Italy as default
+        
+        // Location search functionality
+        const locationSearchInput = document.getElementById('location-search-input');
+        const locationSearchButton = document.getElementById('location-search-button');
+        
+        // Function to handle location search
+        async function handleLocationSearch() {
+            const locationQuery = locationSearchInput.value.trim();
+            if (!locationQuery) return;
+            
+            // Show loading state
+            locationSearchButton.innerHTML = '<div class="ai-assistant-spinner"></div>';
+            locationSearchButton.disabled = true;
+            locationSearchInput.disabled = true;
+            
+            try {
+                // Call the geocode API
+                const response = await fetch('/api/ai/geocode', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ location: locationQuery })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('API request failed');
+                }
+                
+                const data = await response.json();
+                
+                if (data.polygon && data.location_name) {
+                    // Clear existing markers and polygon
+                    markers.forEach(marker => selectionMap.removeLayer(marker));
+                    markers = [];
+                    if (polygon) {
+                        selectionMap.removeLayer(polygon);
+                        polygon = null;
+                    }
+                    
+                    // Create new polygon from the geocoded coordinates
+                    const latlngs = data.polygon.map(point => L.latLng(point[0], point[1]));
+                    
+                    // Create markers at each vertex
+                    latlngs.forEach(latlng => {
+                        const marker = L.marker(latlng, {
+                            draggable: true
+                        }).addTo(selectionMap);
+                        
+                        // Add marker to array
+                        markers.push(marker);
+                        
+                        // Handle marker drag
+                        marker.on('drag', function() {
+                            updatePolygon();
+                        });
+                        
+                        // Handle marker removal on right click
+                        marker.on('contextmenu', function() {
+                            selectionMap.removeLayer(marker);
+                            markers = markers.filter(function(m) {
+                                return m !== marker;
+                            });
+                            updatePolygon();
+                        });
+                    });
+                    
+                    // Update polygon
+                    updatePolygon();
+                    
+                    // Fit map to the polygon bounds
+                    if (polygon) {
+                        selectionMap.fitBounds(polygon.getBounds());
+                    }
+                    
+                    // Show success message
+                    const messageElement = document.createElement('div');
+                    messageElement.className = 'ai-suggestion-message';
+                    messageElement.textContent = `Found location: ${data.location_name}`;
+                    messageElement.style.marginBottom = '10px';
+                    const locationSearchContainer = document.querySelector('.location-search-container');
+                    locationSearchContainer.parentNode.insertBefore(messageElement, locationSearchContainer.nextSibling);
+                    
+                    // Auto-remove the message after 5 seconds
+                    setTimeout(() => {
+                        if (messageElement.parentNode) {
+                            messageElement.parentNode.removeChild(messageElement);
+                        }
+                    }, 5000);
+                } else {
+                    alert('Location not found. Please try a different search term.');
+                }
+            } catch (error) {
+                console.error('Error searching for location:', error);
+                alert('Error searching for location. Please try again.');
+            } finally {
+                // Restore the search button
+                locationSearchButton.innerHTML = '<span class="location-search-icon">+</span>';
+                locationSearchButton.disabled = false;
+                locationSearchInput.disabled = false;
+            }
+        }
+        
+        // Add event listeners for location search
+        locationSearchButton.addEventListener('click', handleLocationSearch);
+        locationSearchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Prevent form submission
+                handleLocationSearch();
+            }
+        });
+        
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(selectionMap);
+        
+        // Add zoom control
+        L.control.zoom({
+            position: 'topright'
+        }).addTo(selectionMap);
+        
+        // Variables for polygon drawing
+        var markers = [];
+        var polygon = null;
+        
+        // Handle clicks for polygon creation
+        selectionMap.on('click', function(e) {
+            // Create a marker
+            var marker = L.marker([e.latlng.lat, e.latlng.lng], {
+                draggable: true
+            }).addTo(selectionMap);
+            
+            // Add marker to array
+            markers.push(marker);
+            
+            // Update polygon
+            updatePolygon();
+            
+            // Handle marker drag
+            marker.on('drag', function() {
+                updatePolygon();
+            });
+            
+            // Handle marker removal on right click
+            marker.on('contextmenu', function() {
+                selectionMap.removeLayer(marker);
+                markers = markers.filter(function(m) {
+                    return m !== marker;
+                });
+                updatePolygon();
+            });
+        });
+        
+        // Function to update polygon
+        function updatePolygon() {
+            // Remove existing polygon
+            if (polygon) {
+                selectionMap.removeLayer(polygon);
+            }
+            
+            // Create new polygon if we have at least 3 markers
+            if (markers.length >= 3) {
+                var latlngs = markers.map(function(marker) {
+                    return marker.getLatLng();
+                });
+                
+                polygon = L.polygon(latlngs, {
+                    color: '#FF6B6B',
+                    fillColor: '#FF6B6B',
+                    fillOpacity: 0.2
+                }).addTo(selectionMap);
+                
+                // Update coordinates input
+                updateCoordinatesInput();
+                
+                // Update price estimate
+                updatePriceEstimate();
+            } else {
+                // Clear coordinates input if not enough markers
+                document.getElementById('coordinates-input').value = '';
+            }
+        }
+        
+        // Function to update coordinates input
+        function updateCoordinatesInput() {
+            if (polygon && polygon.getLatLngs()[0].length >= 3) {
+                const coordinates = polygon.getLatLngs()[0].map(point => [point.lat, point.lng]);
+                document.getElementById('coordinates-input').value = JSON.stringify(coordinates);
+            }
+        }
+        
+        // Function to update price estimate
+        function updatePriceEstimate() {
+            // Get selected data type
+            const dataTypeElements = document.querySelectorAll('input[name="dataType"]');
+            let dataTypeValue = 'S2MSI2A'; // Default
+            for (const element of dataTypeElements) {
+                if (element.checked) {
+                    dataTypeValue = element.value;
+                    break;
+                }
+            }
+            
+            // Convert data type code to display name
+            let dataType = 'Sentinel-2 Level 2A';
+            if (dataTypeValue === 'S1GRD') {
+                dataType = 'Sentinel-1 SAR';
+            } else if (dataTypeValue === 'S3OLCI') {
+                dataType = 'Sentinel-3 OLCI';
+            }
+            
+            // Get AI analysis setting
+            const aiAnalysisEnabled = document.querySelector('input[name="aiAnalysis"]').checked;
+            
+            // Get date range
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+            
+            // Use the pricing module to update the price display
+            window.pricingFunctions.updatePriceDisplay(
+                dataType,
+                polygon,
+                aiAnalysisEnabled,
+                startDate,
+                endDate
+            );
+        }
+        
+        // Data type card selection
+        document.querySelectorAll('.data-type-card').forEach(function(card) {
+            card.addEventListener('click', function() {
+                // Remove selected class from all cards
+                document.querySelectorAll('.data-type-card').forEach(function(c) {
+                    c.classList.remove('selected');
+                });
+                
+                // Add selected class to clicked card
+                this.classList.add('selected');
+                
+                // Check the radio button
+                const radio = this.querySelector('input[type="radio"]');
+                if (radio) {
+                    radio.checked = true;
+                }
+                
+                // Update price estimate
+                updatePriceEstimate();
+            });
+        });
+        
+        // AI analysis toggle event listener
+        document.querySelector('input[name="aiAnalysis"]').addEventListener('change', function() {
+            updatePriceEstimate();
+        });
+        
+        // Date range input event listeners
+        document.getElementById('start-date').addEventListener('change', function() {
+            updatePriceEstimate();
+        });
+        
+        document.getElementById('end-date').addEventListener('change', function() {
+            updatePriceEstimate();
+        });
+        
+        // Form submission with blockchain integration
+        document.getElementById('data-selection-form').addEventListener('submit', async function(e) {
+            e.preventDefault(); // Prevent default form submission
+            
+            // Check if wallet is connected
+            if (!window.FlareServices.isBlockchainInitialized()) {
+                try {
+                    // Show loading message
+                    const proceedButton = document.querySelector('.proceed-button');
+                    const originalButtonText = proceedButton.textContent;
+                    proceedButton.textContent = 'Connecting to blockchain...';
+                    proceedButton.disabled = true;
+                    
+                    // Initialize blockchain
+                    await window.FlareServices.initializeBlockchain();
+                    
+                    // Restore button
+                    proceedButton.textContent = originalButtonText;
+                    proceedButton.disabled = false;
+                } catch (error) {
+                    alert('Failed to connect to blockchain: ' + error.message);
+                    console.error('Blockchain connection error:', error);
+                    return;
+                }
+            }
+            
+            // Make sure we have coordinates if polygon exists
+            if (polygon && polygon.getLatLngs()[0].length >= 3) {
+                updateCoordinatesInput();
+            }
+            
+            // If no coordinates are set, use a default area
+            if (!document.getElementById('coordinates-input').value) {
+                // Default to a small area around Rome
+                const defaultCoordinates = [
+                    [41.9, 12.4],
+                    [41.9, 12.5],
+                    [41.8, 12.5],
+                    [41.8, 12.4]
+                ];
+                document.getElementById('coordinates-input').value = JSON.stringify(defaultCoordinates);
+            }
+            
+            try {
+                // Show loading message
+                const proceedButton = document.querySelector('.proceed-button');
+                const originalButtonText = proceedButton.textContent;
+                proceedButton.textContent = 'Processing...';
+                proceedButton.disabled = true;
+                
+                // Get form data
+                const dataType = document.querySelector('input[name="dataType"]:checked').value;
+                const startDate = document.getElementById('start-date').value;
+                const endDate = document.getElementById('end-date').value;
+                const coordinates = document.getElementById('coordinates-input').value;
+                const aiAnalysis = document.querySelector('input[name="aiAnalysis"]').checked;
+                
+                // Generate request ID using blockchain API
+                const dataInfo = {
+                    dataType,
+                    startDate,
+                    endDate,
+                    coordinates,
+                    aiAnalysis
+                };
+                
+                // Generate request ID
+                const requestId = await window.FlareServices.generateRequestId(dataInfo);
+                
+                // Add request ID to form as hidden input
+                let requestIdInput = document.getElementById('request-id-input');
+                if (!requestIdInput) {
+                    requestIdInput = document.createElement('input');
+                    requestIdInput.type = 'hidden';
+                    requestIdInput.id = 'request-id-input';
+                    requestIdInput.name = 'requestId';
+                    document.getElementById('data-selection-form').appendChild(requestIdInput);
+                }
+                requestIdInput.value = requestId;
+                
+                // Get price from price display
+                const priceText = document.getElementById('price-estimate').textContent;
+                const price = parseFloat(priceText.split(' ')[0]);
+                
+                // Purchase data using blockchain
+                try {
+                    const receipt = await window.FlareServices.purchaseData(requestId, price);
+                    console.log('Purchase transaction receipt:', receipt);
+                    
+                    // Add transaction hash to form as hidden input
+                    let txHashInput = document.getElementById('tx-hash-input');
+                    if (!txHashInput) {
+                        txHashInput = document.createElement('input');
+                        txHashInput.type = 'hidden';
+                        txHashInput.id = 'tx-hash-input';
+                        txHashInput.name = 'txHash';
+                        document.getElementById('data-selection-form').appendChild(txHashInput);
+                    }
+                    txHashInput.value = receipt.transactionHash;
+                    
+                    // Submit the form
+                    document.getElementById('data-selection-form').submit();
+                } catch (error) {
+                    console.error('Error purchasing data:', error);
+                    alert('Error purchasing data: ' + error.message);
+                    
+                    // Restore button
+                    proceedButton.textContent = originalButtonText;
+                    proceedButton.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error processing form:', error);
+                alert('Error processing form: ' + error.message);
+                
+                // Restore button
+                const proceedButton = document.querySelector('.proceed-button');
+                proceedButton.textContent = 'Proceed to Results';
+                proceedButton.disabled = false;
+            }
+        });
+        
+        // Initialize price estimate
+        updatePriceEstimate();
+        
+        // Check for query parameter from AI Assistant
+        const urlParams = new URLSearchParams(window.location.search);
+        const aiQuery = urlParams.get('query');
+        if (aiQuery) {
+            // In a real implementation, this would use the query to pre-select options
+            console.log('AI Assistant query:', aiQuery);
+            
+            // For now, just show a message
+            const messageElement = document.createElement('div');
+            messageElement.className = 'ai-suggestion-message';
+            messageElement.textContent = 'AI suggestion based on: "' + aiQuery + '"';
+            document.querySelector('.selection-section').prepend(messageElement);
+        }
+    </script>
+</body>
+</html>

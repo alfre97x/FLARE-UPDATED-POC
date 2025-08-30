@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpaceData - Data Results</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="/web-app/styles.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Add ethers.js for blockchain interactions -->
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js" type="application/javascript"></script>
+    
+    <!-- Application scripts -->
+    <script src="/web-app/metamask-connection.js"></script>
+    <script src="/web-app/flare-services.js"></script>
+    <script src="/web-app/wallet.js"></script>
+    <script src="/web-app/copernicus-api.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="logo">
+                <div class="logo-circle"></div>
+                <h1>SpaceData</h1>
+            </div>
+            <div class="header-nav">
+                <a href="#" class="sign-in-link">Account</a>
+            </div>
+        </header>
+
+        <main>
+            <!-- Back Button and Page Title -->
+            <div class="page-header">
+                <a href="/web-app/data-selection.html" class="back-button">
+                    <span class="back-arrow">←</span>
+                    <span>Back</span>
+                </a>
+                <div class="page-title-container">
+                    <h2 class="page-title">Data Results</h2>
+                    <p class="location-date">Barcelona Metropolitan Area • April 15, 2023</p>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="tabs-container">
+                <div class="tabs">
+                    <div class="tab">Raw Data</div>
+                    <div class="tab active">AI Analysis</div>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <section class="section results-content">
+                <!-- Earth Observation Images -->
+                <div class="satellite-images-grid" id="satellite-images-grid">
+                    <div class="satellite-image">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+
+                <!-- Analysis Results Section -->
+                <h3 class="results-section-title">AI Analysis Results</h3>
+                
+                <div class="analysis-charts">
+                    <!-- Land Cover Distribution Chart -->
+                    <div class="chart-container">
+                        <h4 class="chart-title">Land Cover Distribution</h4>
+                        <div class="donut-chart-container">
+                            <div class="donut-chart">
+                                <div class="donut-segment forest" style="--offset: 0; --length: 45.2"></div>
+                                <div class="donut-segment urban" style="--offset: 45.2; --length: 30.1"></div>
+                                <div class="donut-segment water" style="--offset: 75.3; --length: 24.7"></div>
+                            </div>
+                            <div class="chart-legend">
+                                <div class="legend-item">
+                                    <div class="legend-color forest"></div>
+                                    <div class="legend-text">Forest (45.2%)</div>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color urban"></div>
+                                    <div class="legend-text">Urban (30.1%)</div>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color water"></div>
+                                    <div class="legend-text">Water (24.7%)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Change Detection Chart -->
+                    <div class="chart-container">
+                        <h4 class="chart-title">Change Detection</h4>
+                        <div class="bar-chart-container">
+                            <div class="bar-chart">
+                                <div class="chart-axes">
+                                    <div class="y-axis"></div>
+                                    <div class="x-axis"></div>
+                                    <div class="zero-line"></div>
+                                </div>
+                                <div class="bars">
+                                    <div class="bar-group">
+                                        <div class="bar forest negative" style="--height: 1.2"></div>
+                                        <div class="bar-label">Forest</div>
+                                        <div class="bar-value negative">-1.2%</div>
+                                    </div>
+                                    <div class="bar-group">
+                                        <div class="bar urban positive" style="--height: 3.5"></div>
+                                        <div class="bar-label">Urban</div>
+                                        <div class="bar-value positive">+3.5%</div>
+                                    </div>
+                                    <div class="bar-group">
+                                        <div class="bar water negative" style="--height: 0.3"></div>
+                                        <div class="bar-label">Water</div>
+                                        <div class="bar-value negative">-0.3%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- AI Chat Section -->
+            <section class="section chat-section">
+                <h3 class="chat-section-title">Chat with AI Assistant</h3>
+                
+                <div class="chat-messages">
+                    <!-- Chat messages will be displayed here -->
+                </div>
+                
+                <div class="chat-input-container">
+                    <input type="text" class="chat-input" placeholder="Ask about this satellite data...">
+                    <button class="chat-send-button">
+                        <span class="send-icon">↗</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Actions Footer -->
+            <section class="section actions-footer">
+                <div class="action-buttons">
+                    <button class="action-button primary">Download Report</button>
+                    <button class="action-button secondary">Download Image</button>
+                    <button class="action-button secondary">Share Results</button>
+                </div>
+                <div class="transaction-info">
+                    Transaction: <span id="transaction-hash">0x8f2c4b...</span>
+                    <span id="transaction-status" class="transaction-status">Pending</span>
+                    <div id="blockchain-verification-details" class="verification-details" style="display: none;">
+                        <p>Blockchain verification powered by Flare Network</p>
+                        <p>Data integrity verified through Flare Data Consensus (FDC)</p>
+                        <div class="verification-data">
+                            <div class="verification-row">
+                                <span class="verification-label">Request ID:</span>
+                                <span id="request-id" class="verification-value">0x0000...</span>
+                            </div>
+                            <div class="verification-row">
+                                <span class="verification-label">Attestation Status:</span>
+                                <span id="attestation-status" class="verification-value">Pending</span>
+                            </div>
+                            <div class="verification-row">
+                                <span class="verification-label">Attestation TX:</span>
+                                <span id="attestation-tx" class="verification-value">0x0000...</span>
+                            </div>
+                            <div class="verification-row">
+                                <span class="verification-label">Verified By:</span>
+                                <span id="verified-by" class="verification-value">Flare Data Consensus</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="verification-details-toggle" class="details-toggle">Show Details</button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="main-footer">
+            <p>&copy; 2025 SpaceData • Powered by Flare Network</p>
+        </footer>
+    </div>
+
+    <script>
+        // Global state
+        let satelliteData = null;
+        let analysisResults = null;
+        let currentView = 'analysis'; // 'raw' or 'analysis'
+        
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const dataType = urlParams.get('dataType') || 'S2MSI2A';
+        const startDate = urlParams.get('startDate') || '2023-04-15';
+        const endDate = urlParams.get('endDate') || '2023-04-22';
+        const coordinates = urlParams.get('coordinates') ? JSON.parse(decodeURIComponent(urlParams.get('coordinates'))) : null;
+        const transactionHash = urlParams.get('txHash') || '0x8f2c4b7e9d6f8a1b2c3d4e5f6a7b8c9d0e1f2a3b';
+        
+        // Update location and date in the header
+        document.querySelector('.location-date').textContent = `Selected Area • ${startDate} to ${endDate}`;
+        
+        // Load satellite data and analysis results
+        async function loadData() {
+            try {
+                // Show loading state
+                document.querySelector('.satellite-image').innerHTML = '<div class="loading-spinner"></div>';
+                document.querySelector('.results-section-title').textContent = 'Loading data...';
+                
+                // Fetch satellite data
+                console.log('Fetching satellite data...');
+                satelliteData = await window.copernicusAPI.fetchSatelliteData({
+                    dataType,
+                    coordinates,
+                    startDate,
+                    endDate,
+                    transactionHash
+                });
+                
+                console.log('Satellite data received:', satelliteData);
+                
+                // Analyze satellite data
+                console.log('Analyzing satellite data...');
+                analysisResults = await window.copernicusAPI.analyzeSatelliteData(satelliteData);
+                
+                console.log('Analysis results received:', analysisResults);
+                
+                // Check if these are mock/default values
+                if (analysisResults && analysisResults.landCover) {
+                    const isMockData = (
+                        Math.abs(analysisResults.landCover.forest - 45.2) < 0.1 &&
+                        Math.abs(analysisResults.landCover.urban - 30.1) < 0.1 &&
+                        Math.abs(analysisResults.landCover.water - 24.7) < 0.1
+                    );
+                    
+                    if (isMockData) {
+                        console.warn('Mock data detected in analysis results - will not pass to AI chat');
+                        // Set a flag to indicate mock data
+                        analysisResults.isMockData = true;
+                    }
+                }
+                
+                // Update UI with data
+                updateUI();
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.querySelector('.results-section-title').textContent = 'Error loading data';
+                document.querySelector('.satellite-image').innerHTML = '<div class="error-message">Failed to load satellite data</div>';
+            }
+        }
+        
+        // Update UI with loaded data
+        async function updateUI() {
+            if (!satelliteData || !analysisResults) return;
+            
+            // Update satellite images grid
+            const imagesGrid = document.getElementById('satellite-images-grid');
+            
+            // Check if we have multiple images
+            if (satelliteData.additionalImages && satelliteData.additionalImages.length > 0) {
+                // Clear the grid
+                imagesGrid.innerHTML = '';
+                imagesGrid.style.display = 'grid';
+                imagesGrid.style.gridTemplateColumns = `repeat(${Math.min(satelliteData.additionalImages.length, 3)}, 1fr)`;
+                imagesGrid.style.gap = '20px';
+                
+                // Add all images
+                satelliteData.additionalImages.forEach((imageData, index) => {
+                    const imageContainer = document.createElement('div');
+                    imageContainer.className = 'satellite-image';
+                    imageContainer.innerHTML = `
+                        <img src="${imageData.url}" alt="Satellite image ${index + 1}" class="satellite-image-content">
+                        <div class="image-caption">${imageData.metadata.Name || `Image ${index + 1}`}</div>
+                    `;
+                    imagesGrid.appendChild(imageContainer);
+                });
+            } else {
+                // Single image display
+                imagesGrid.innerHTML = '';
+                imagesGrid.style.display = 'block';
+                const imageContainer = document.createElement('div');
+                imageContainer.className = 'satellite-image';
+                imageContainer.innerHTML = `<img src="${satelliteData.imageUrl}" alt="Satellite image" class="satellite-image-content">`;
+                imagesGrid.appendChild(imageContainer);
+            }
+            
+            // Update results title
+            document.querySelector('.results-section-title').textContent = currentView === 'analysis' ? 'AI Analysis Results' : 'Raw Satellite Data';
+            
+            if (currentView === 'analysis') {
+                // Update land cover chart
+                updateLandCoverChart(analysisResults.landCover);
+                
+                // Update change detection chart
+                updateChangeDetectionChart(analysisResults.change);
+                
+                // Show analysis charts
+                document.querySelector('.analysis-charts').style.display = 'flex';
+                
+            } else {
+                // Hide analysis charts for raw view
+                document.querySelector('.analysis-charts').style.display = 'none';
+                
+                // Show raw data (would be implemented in a real app)
+                // This would display metadata, bands, etc.
+            }
+            
+            // Update transaction hash and status
+            document.getElementById('transaction-hash').textContent = transactionHash.substring(0, 8) + '...';
+            
+            // Add click event to transaction hash to open block explorer
+            document.getElementById('transaction-hash').addEventListener('click', function() {
+                const explorerUrl = `https://coston-explorer.flare.network/tx/${transactionHash}`;
+                window.open(explorerUrl, '_blank');
+            });
+            
+            // Style the transaction hash as a link
+            document.getElementById('transaction-hash').style.cursor = 'pointer';
+            document.getElementById('transaction-hash').style.textDecoration = 'underline';
+            
+            // Update transaction status
+            const statusElement = document.getElementById('transaction-status');
+            
+            // Generate a deterministic request ID from the URL parameters
+            const requestIdData = {
+                dataType,
+                startDate,
+                endDate,
+                coordinates,
+                txHash: transactionHash
+            };
+            
+            // Check blockchain verification status
+            await checkBlockchainVerification(statusElement);
+        }
+        
+        // Check blockchain verification status
+        async function checkBlockchainVerification(statusElement) {
+            try {
+                // Initialize Flare services
+                await window.flareServices.initFlareServices();
+                
+                // Generate a request ID for verification
+                const requestId = await window.flareServices.generateRequestId({
+                    dataType,
+                    coordinates,
+                    startDate,
+                    endDate
+                });
+                
+                console.log('Generated request ID:', requestId);
+                
+                // Update request ID in the UI
+                document.getElementById('request-id').textContent = requestId.substring(0, 8) + '...';
+                document.getElementById('request-id').title = requestId;
+                
+                // Check verification status
+                const verificationResult = await window.flareServices.verifyAttestation(requestId);
+                
+                console.log('Verification result:', verificationResult);
+                
+                // Update verification status in the UI
+                if (verificationResult.verified) {
+                    // Transaction is verified
+                    statusElement.textContent = 'Verified';
+                    statusElement.className = 'transaction-status verified';
+                    document.getElementById('attestation-status').textContent = 'Verified';
+                    document.getElementById('attestation-status').className = 'verification-value verified';
+                    
+                    // If we have attestation response and proof, show them
+                    if (verificationResult.attestationResponse) {
+                        document.getElementById('attestation-tx').textContent = 
+                            verificationResult.attestationResponse.substring(0, 8) + '...';
+                        document.getElementById('attestation-tx').title = verificationResult.attestationResponse;
+                    }
+                } else {
+                    // Transaction is pending or not found
+                    if (verificationResult.status === 'pending') {
+                        statusElement.textContent = 'Pending';
+                        statusElement.className = 'transaction-status pending';
+                        document.getElementById('attestation-status').textContent = 'Pending';
+                        
+                        // Check again after 10 seconds
+                        setTimeout(async () => {
+                            const updatedResult = await window.flareServices.verifyAttestation(requestId);
+                            if (updatedResult.verified) {
+                                statusElement.textContent = 'Verified';
+                                statusElement.className = 'transaction-status verified';
+                                document.getElementById('attestation-status').textContent = 'Verified';
+                                document.getElementById('attestation-status').className = 'verification-value verified';
+                            }
+                        }, 10000);
+                    } else if (verificationResult.status === 'not_found') {
+                        statusElement.textContent = 'Not Found';
+                        statusElement.className = 'transaction-status pending';
+                        document.getElementById('attestation-status').textContent = 'Not Found';
+                    } else {
+                        statusElement.textContent = 'Error';
+                        statusElement.className = 'transaction-status pending';
+                        document.getElementById('attestation-status').textContent = 'Error';
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking verification status:', error);
+                statusElement.textContent = 'Error';
+                statusElement.className = 'transaction-status pending';
+                document.getElementById('attestation-status').textContent = 'Error';
+            }
+        }
+        
+        // Update land cover donut chart
+        function updateLandCoverChart(landCover) {
+            const donutChart = document.querySelector('.donut-chart');
+            const chartLegend = document.querySelector('.chart-legend');
+            
+            // Clear existing segments and legend items
+            donutChart.innerHTML = '';
+            chartLegend.innerHTML = '';
+            
+            // Calculate total for percentages
+            const total = Object.values(landCover).reduce((sum, value) => sum + value, 0);
+            
+            // Track offset for donut segments
+            let offset = 0;
+            
+            // Create segments and legend items for each land cover type
+            for (const [type, value] of Object.entries(landCover)) {
+                const percentage = (value / total) * 100;
+                
+                // Create donut segment
+                const segment = document.createElement('div');
+                segment.className = `donut-segment ${type}`;
+                segment.style.setProperty('--offset', offset);
+                segment.style.setProperty('--length', percentage);
+                donutChart.appendChild(segment);
+                
+                // Create legend item
+                const legendItem = document.createElement('div');
+                legendItem.className = 'legend-item';
+                legendItem.innerHTML = `
+                    <div class="legend-color ${type}"></div>
+                    <div class="legend-text">${type.charAt(0).toUpperCase() + type.slice(1)} (${percentage.toFixed(1)}%)</div>
+                `;
+                chartLegend.appendChild(legendItem);
+                
+                // Update offset for next segment
+                offset += percentage;
+            }
+        }
+        
+        // Update change detection bar chart
+        function updateChangeDetectionChart(changeData) {
+            const barsContainer = document.querySelector('.bars');
+            
+            // Clear existing bars
+            barsContainer.innerHTML = '';
+            
+            // Create bar for each change type
+            for (const [type, value] of Object.entries(changeData)) {
+                const isPositive = value >= 0;
+                const absValue = Math.abs(value);
+                
+                // Create bar group
+                const barGroup = document.createElement('div');
+                barGroup.className = 'bar-group';
+                barGroup.innerHTML = `
+                    <div class="bar ${type} ${isPositive ? 'positive' : 'negative'}" style="--height: ${absValue}"></div>
+                    <div class="bar-label">${type.replace('Change', '')}</div>
+                    <div class="bar-value ${isPositive ? 'positive' : 'negative'}">${isPositive ? '+' : ''}${value}%</div>
+                `;
+                barsContainer.appendChild(barGroup);
+            }
+        }
+        
+        // Tab switching functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                this.classList.add('active');
+                
+                // Update current view
+                currentView = this.textContent.trim().toLowerCase() === 'raw data' ? 'raw' : 'analysis';
+                
+                // Update UI
+                updateUI();
+            });
+        });
+        
+        // Chat functionality with conversation memory
+        const chatInput = document.querySelector('.chat-input');
+        const chatSendButton = document.querySelector('.chat-send-button');
+        const chatMessages = document.querySelector('.chat-messages');
+        
+        // Store conversation history
+        let conversationHistory = [];
+        let userApplication = null;
+        let extractedLocation = null;
+        
+        // Extract location name if available
+        async function extractLocationName() {
+            if (coordinates && coordinates.length > 0) {
+                try {
+                    const lats = coordinates.map(point => point[0]);
+                    const lngs = coordinates.map(point => point[1]);
+                    const centerLat = lats.reduce((a, b) => a + b) / lats.length;
+                    const centerLng = lngs.reduce((a, b) => a + b) / lngs.length;
+                    
+                    // Try to get location name from reverse geocoding
+                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${centerLat}&lon=${centerLng}&format=json`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        extractedLocation = data.display_name || `Area at [${centerLat.toFixed(4)}, ${centerLng.toFixed(4)}]`;
+                        
+                        // Update the location display
+                        const locationText = data.address?.city || data.address?.town || data.address?.suburb || extractedLocation;
+                        document.querySelector('.location-date').textContent = `${locationText} • ${startDate} to ${endDate}`;
+                    }
+                } catch (error) {
+                    console.log('Could not extract location name:', error);
+                    if (coordinates && coordinates.length > 0) {
+                        const lats = coordinates.map(point => point[0]);
+                        const lngs = coordinates.map(point => point[1]);
+                        const centerLat = lats.reduce((a, b) => a + b) / lats.length;
+                        const centerLng = lngs.reduce((a, b) => a + b) / lngs.length;
+                        extractedLocation = `Area at [${centerLat.toFixed(4)}, ${centerLng.toFixed(4)}]`;
+                        document.querySelector('.location-date').textContent = `${extractedLocation} • ${startDate} to ${endDate}`;
+                    }
+                }
+            }
+        }
+        
+        // Call this when the page loads
+        extractLocationName();
+        
+        // Enhanced function to detect user application from any message
+        function detectUserApplication(message) {
+            const applicationPatterns = [
+                // Agriculture & Farming
+                { keywords: ['agriculture', 'agricultural', 'farming', 'farm', 'crop', 'crops', 'harvest', 'irrigation', 'soil', 'field', 'fields', 'plantation', 'yield'], application: 'agriculture monitoring' },
+                // Urban Planning
+                { keywords: ['urban planning', 'city development', 'infrastructure', 'construction', 'building', 'zoning', 'urbanization', 'urban growth', 'city expansion'], application: 'urban planning' },
+                // Environmental Monitoring
+                { keywords: ['environmental', 'environment', 'conservation', 'climate', 'ecosystem', 'ecological', 'biodiversity', 'pollution', 'emissions'], application: 'environmental assessment' },
+                // Disaster Management
+                { keywords: ['disaster', 'emergency', 'flood', 'flooding', 'fire', 'wildfire', 'drought', 'hurricane', 'earthquake', 'landslide'], application: 'disaster response' },
+                // Water Resources
+                { keywords: ['water resource', 'water management', 'hydrology', 'watershed', 'river', 'lake', 'reservoir', 'water quality', 'water supply'], application: 'water resource management' },
+                // Forest Monitoring
+                { keywords: ['deforestation', 'forest monitoring', 'logging', 'forest', 'forestry', 'tree cover', 'woodland', 'timber'], application: 'forest monitoring' },
+                // Real Estate
+                { keywords: ['real estate', 'property', 'land development', 'land value', 'property assessment', 'land use'], application: 'real estate analysis' },
+                // Research
+                { keywords: ['research', 'academic', 'study', 'analysis', 'thesis', 'dissertation', 'scientific', 'investigation'], application: 'research' },
+                // Mining
+                { keywords: ['mining', 'mineral', 'extraction', 'quarry', 'excavation'], application: 'mining operations' },
+                // Insurance
+                { keywords: ['insurance', 'risk assessment', 'claims', 'damage assessment'], application: 'insurance assessment' }
+            ];
+            
+            const lowerMessage = message.toLowerCase();
+            
+            // Check each application pattern
+            for (const pattern of applicationPatterns) {
+                for (const keyword of pattern.keywords) {
+                    if (lowerMessage.includes(keyword)) {
+                        console.log(`Detected application: ${pattern.application} from keyword: ${keyword}`);
+                        return pattern.application;
+                    }
+                }
+            }
+            
+            // Also check for explicit statements like "I need this for...", "I'm using this for...", etc.
+            const explicitPatterns = [
+                /i(?:'m| am)?\s+(?:using|need(?:ing)?|want(?:ing)?|looking|planning|trying|working)\s+(?:this|it|the data|to)\s+(?:for|to|on)\s+([^.!?]+)/i,
+                /(?:for|to)\s+(?:my|our|the)\s+([^.!?]+)\s+(?:project|work|analysis|study|application|use case|purpose)/i,
+                /(?:help|assist|support)\s+(?:me|us|with)\s+(?:my|our|in)?\s*([^.!?]+)/i
+            ];
+            
+            for (const pattern of explicitPatterns) {
+                const match = lowerMessage.match(pattern);
+                if (match && match[1]) {
+                    const extractedPurpose = match[1].trim();
+                    // Check if the extracted purpose matches any known applications
+                    for (const appPattern of applicationPatterns) {
+                        for (const keyword of appPattern.keywords) {
+                            if (extractedPurpose.includes(keyword)) {
+                                console.log(`Detected application from phrase: ${pattern.application}`);
+                                return appPattern.application;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return null;
+        }
+        
+        async function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+            
+            // Add user message to history FIRST (so it's included when sent to AI)
+            conversationHistory.push({ role: 'user', content: message });
+            
+            // Log the first message for debugging
+            if (conversationHistory.length === 1) {
+                console.log('First user message:', message);
+            }
+            
+            // Add user message to UI
+            const userMessageElement = document.createElement('div');
+            userMessageElement.className = 'chat-message user';
+            userMessageElement.innerHTML = `
+                <div class="message-content">
+                    ${message}
+                </div>
+            `;
+            chatMessages.appendChild(userMessageElement);
+            
+            // Clear input
+            chatInput.value = '';
+            
+            // Show typing indicator
+            const typingIndicator = document.createElement('div');
+            typingIndicator.className = 'chat-message ai typing';
+            typingIndicator.innerHTML = `
+                <div class="message-avatar">AI</div>
+                <div class="message-content">
+                    <div class="typing-indicator">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+            `;
+            chatMessages.appendChild(typingIndicator);
+            
+            // Scroll to bottom of chat
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            try {
+                // Parse coordinates properly
+                let parsedCoordinates = null;
+                if (coordinates) {
+                    try {
+                        parsedCoordinates = typeof coordinates === 'string' ? JSON.parse(coordinates) : coordinates;
+                    } catch (e) {
+                        console.log('Could not parse coordinates:', e);
+                    }
+                }
+                
+                // Real satellite analysis is not yet implemented - use coordinates and location only
+                console.log('Chat API using coordinates and location only - no analysis results');
+                
+                // Call the AI chat API (analysis results completely removed)
+                const response = await fetch('/api/ai/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        query: message,
+                        dataType: dataType,
+                        location: extractedLocation || 'Selected Area',
+                        coordinates: parsedCoordinates,
+                        startDate: startDate,
+                        endDate: endDate,
+                        conversationHistory: conversationHistory,
+                        userApplication: userApplication
+                    })
+                });
+                
+                // Remove typing indicator
+                chatMessages.removeChild(typingIndicator);
+                
+                let responseText;
+                if (response.ok) {
+                    const data = await response.json();
+                    responseText = data.response;
+                    
+                    // Add AI response to conversation history
+                    conversationHistory.push({ role: 'assistant', content: responseText });
+                    
+                    // Check if AI is asking about application
+                    if (responseText.toLowerCase().includes('what will you be using') || 
+                        responseText.toLowerCase().includes('what application') ||
+                        responseText.toLowerCase().includes('how are you planning to use')) {
+                        // AI is asking about application, wait for user response
+                        console.log('AI is asking about user application');
+                    }
+                } else {
+                    // Fallback response
+                    responseText = generateFallbackResponse(message);
+                }
+                
+                // Create AI response (escape any HTML to prevent rendering issues)
+                const aiMessageElement = document.createElement('div');
+                aiMessageElement.className = 'chat-message ai';
+                const messageAvatar = document.createElement('div');
+                messageAvatar.className = 'message-avatar';
+                messageAvatar.textContent = 'AI';
+                const messageContent = document.createElement('div');
+                messageContent.className = 'message-content';
+                messageContent.textContent = responseText; // Use textContent to avoid HTML injection
+                aiMessageElement.appendChild(messageAvatar);
+                aiMessageElement.appendChild(messageContent);
+                chatMessages.appendChild(aiMessageElement);
+                
+                // Scroll to bottom of chat
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                
+            } catch (error) {
+                console.error('Error sending chat message:', error);
+                
+                // Remove typing indicator
+                chatMessages.removeChild(typingIndicator);
+                
+                // Show error or fallback response
+                const aiMessageElement = document.createElement('div');
+                aiMessageElement.className = 'chat-message ai';
+                aiMessageElement.innerHTML = `
+                    <div class="message-avatar">AI</div>
+                    <div class="message-content">
+                        ${generateFallbackResponse(message)}
+                    </div>
+                `;
+                chatMessages.appendChild(aiMessageElement);
+                
+                // Scroll to bottom of chat
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+        
+        // Generate fallback response when API is unavailable
+        function generateFallbackResponse(message) {
+            // Get coordinates info
+            let coordInfo = '';
+            if (coordinates && coordinates.length > 0) {
+                const lats = coordinates.map(point => point[0]);
+                const lngs = coordinates.map(point => point[1]);
+                const centerLat = lats.reduce((a, b) => a + b) / lats.length;
+                const centerLng = lngs.reduce((a, b) => a + b) / lngs.length;
+                coordInfo = `at coordinates [${centerLat.toFixed(4)}, ${centerLng.toFixed(4)}] `;
+            }
+            
+            if (!userApplication) {
+                return `I'm here to help with satellite data analysis ${coordInfo}. What will you be using this satellite data for? I can provide insights for applications like agriculture, urban planning, environmental assessment, or water resource management.`;
+            } else {
+                return `I'm analyzing the satellite data ${coordInfo}for your ${userApplication} needs. However, detailed analysis results are still being processed. Please ask me specific questions about the area and I'll do my best to help based on the location and coordinates.`;
+            }
+        }
+        
+        chatSendButton.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        // Action buttons
+        document.querySelectorAll('.action-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const action = this.textContent.trim();
+                
+                if (action === 'Download Report') {
+                    // Simulate report download
+                    const reportBlob = new Blob([JSON.stringify({
+                        metadata: satelliteData.metadata,
+                        analysis: analysisResults,
+                        timestamp: new Date().toISOString(),
+                        transaction: transactionHash
+                    }, null, 2)], { type: 'application/json' });
+                    
+                    const url = URL.createObjectURL(reportBlob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `satellite-report-${startDate}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                } else if (action === 'Download Image') {
+                    // Simulate image download by opening in new tab
+                    window.open(satelliteData.imageUrl, '_blank');
+                    
+                } else if (action === 'Share Results') {
+                    // Simulate sharing by copying link to clipboard
+                    const shareUrl = `${window.location.origin}${window.location.pathname}?dataType=${dataType}&startDate=${startDate}&endDate=${endDate}&txHash=${transactionHash}`;
+                    
+                    navigator.clipboard.writeText(shareUrl)
+                        .then(() => alert('Link copied to clipboard!'))
+                        .catch(err => console.error('Failed to copy link:', err));
+                }
+            });
+        });
+        
+        // Verification details toggle
+        document.getElementById('verification-details-toggle').addEventListener('click', function() {
+            const detailsElement = document.getElementById('blockchain-verification-details');
+            const isHidden = detailsElement.style.display === 'none';
+            
+            // Toggle visibility
+            detailsElement.style.display = isHidden ? 'block' : 'none';
+            
+            // Update button text
+            this.textContent = isHidden ? 'Hide Details' : 'Show Details';
+        });
+        
+        // Load data when page loads
+        window.addEventListener('DOMContentLoaded', loadData);
+    </script>
+</body>
+</html>

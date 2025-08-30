@@ -1,0 +1,59 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "abiEncodedRequest",
+        "type": "bytes"
+      }
+    ],
+    "name": "requestAttestation",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "requestId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "requester",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "abiEncodedRequest",
+        "type": "bytes"
+      }
+    ],
+    "name": "AttestationRequested",
+    "type": "event"
+  }
+]

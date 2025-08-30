@@ -1,0 +1,55 @@
+# Environment variables
+.env
+*.env
+**/.env
+
+# Log files
+*.log
+
+# Temporary files
+python_backend/static/temp_*
+
+# Build artifacts
+artifacts/
+cache/
+node_modules/
+
+# Backup files
+*.backup
+*.backup*
+*_backup_*
+
+# IDE files
+.vscode/
+.idea/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Sensitive information
+**/private_key*
+**/secret*
+**/credentials*
+
+# Temporary backup scripts
+backup-project.bat
+backup-project.sh
+
+# Logs
+ai_service.log
+blockchain_api.log
+
+# Mobile app build files
+space-data-app/node_modules/
+space-data-app/.expo/
+space-data-app/dist/
+space-data-app/npm-debug.*
+space-data-app/*.jks
+space-data-app/*.p8
+space-data-app/*.p12
+space-data-app/*.key
+space-data-app/*.mobileprovision
+space-data-app/*.orig.*
+space-data-app/web-build/

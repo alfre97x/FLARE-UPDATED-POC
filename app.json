@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "space-data-purchase",
+    "slug": "space-data-purchase",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./space-data-app/assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./space-data-app/assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./space-data-app/assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "web": {
+      "favicon": "./space-data-app/assets/favicon.png",
+      "bundler": "metro",
+      "build": {
+        "babel": {
+          "include": ["./space-data-app"]
+        }
+      }
+    },
+    "platforms": ["ios", "android", "web"],
+    "entryPoint": "./index.js",
+    "webEntryPoint": "./web.js",
+    "plugins": [
+      "expo-secure-store"
+    ]
+  }
+}

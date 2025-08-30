@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetaMask Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #FF6B6B;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        button:hover {
+            background-color: #e05c5c;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+        pre {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>MetaMask Connection Test</h1>
+    
+    <div>
+        <h2>1. Basic Connection</h2>
+        <button id="check-metamask">Check MetaMask</button>
+        <button id="connect-metamask">Connect to MetaMask</button>
+        <div id="connection-result" class="result">
+            <p>Connection status will appear here...</p>
+        </div>
+    </div>
+    
+    <div>
+        <h2>2. Network Check</h2>
+        <button id="check-network">Check Network</button>
+        <button id="switch-network">Switch to Flare Network</button>
+        <div id="network-result" class="result">
+            <p>Network status will appear here...</p>
+        </div>
+    </div>
+    
+    <div>
+        <h2>3. Simple Transaction</h2>
+        <button id="send-transaction">Send Test Transaction</button>
+        <div id="transaction-result" class="result">
+            <p>Transaction result will appear here...</p>
+        </div>
+    </div>
+    
+    <div>
+        <h2>4. Contract Interaction</h2>
+        <button id="call-contract">Call Contract Function</button>
+        <div id="contract-result" class="result">
+            <p>Contract interaction result will appear here...</p>
+        </div>
+    </div>
+    
+    <script>
+        // Flare Network configuration (Coston2 Testnet)
+        const FLARE_NETWORK_PARAMS = {
+            chainId: '0x1A', // Chain ID for Coston2 Testnet (26 in decimal)
+            chainName: 'Coston2 Testnet',
+            nativeCurrency: {
+                name: 'Coston2 Flare',
+                symbol: 'C2FLR',
+                decimals: 18
+            },
+            rpcUrls: ['https://coston2-api.flare.network/ext/C/rpc'],
+            blockExplorerUrls: ['https://coston2-explorer.flare.network']
+        };
+        
+        // Contract address
+        const CONTRACT_ADDRESS = '0x2330d0cc23fd6764b7c67023c8fb85ae7287bfc9';
+        
+        // Function to update result display
+        function updateResult(elementId, message, isError = false) {
+            const resultElement = document.getElementById(elementId);
+            resultElement.innerHTML = `<p class="${isError ? 'error' : 'success'}">${message}</p>`;
+        }
+        
+        // Function to display object as JSON
+        function displayObject(elementId, obj) {
+            const resultElement = document.getElementById(elementId);
+            const currentContent = resultElement.innerHTML;
+            resultElement.innerHTML = `${currentContent}<pre>${JSON.stringify(obj, null, 2)}</pre>`;
+        }
+        
+        // 1. Check if MetaMask is installed
+        document.getElementById('check-metamask').addEventListener('click', function() {
+            try {
+                if (window.ethereum) {
+                    updateResult('connection-result', 'MetaMask is installed!');
+                    displayObject('connection-result', {
+                        isMetaMask: window.ethereum.isMetaMask,
+                        selectedAddress: window.ethereum.selectedAddress,
+                        chainId: window.ethereum.chainId,
+                        networkVersion: window.ethereum.networkVersion,
+                        isConnected: window.ethereum.isConnected?.()
+                    });
+                } else {
+                    updateResult('connection-result', 'MetaMask is not installed!', true);
+                }
+            } catch (error) {
+                updateResult('connection-result', `Error checking MetaMask: ${error.message}`, true);
+                console.error(error);
+            }
+        });
+        
+        // 2. Connect to MetaMask
+        document.getElementById('connect-metamask').addEventListener('click', async function() {
+            try {
+                if (!window.ethereum) {
+                    updateResult('connection-result', 'MetaMask is not installed!', true);
+                    return;
+                }
+                
+                updateResult('connection-result', 'Requesting accounts...');
+                
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                
+                if (accounts.length > 0) {
+                    updateResult('connection-result', `Connected to account: ${accounts[0]}`);
+                    
+                    // Get account balance
+                    const balance = await window.ethereum.request({
+                        method: 'eth_getBalance',
+                        params: [accounts[0], 'latest']
+                    });
+                    
+                    const balanceInEth = parseInt(balance, 16) / 1e18;
+                    displayObject('connection-result', {
+                        account: accounts[0],
+                        balance: balance,
+                        balanceInEth: balanceInEth.toFixed(6)
+                    });
+                } else {
+                    updateResult('connection-result', 'No accounts found!', true);
+                }
+            } catch (error) {
+                updateResult('connection-result', `Error connecting to MetaMask: ${error.message}`, true);
+                console.error(error);
+            }
+        });
+        
+        // 3. Check current network
+        document.getElementById('check-network').addEventListener('click', async function() {
+            try {
+                if (!window.ethereum) {
+                    updateResult('network-result', 'MetaMask is not installed!', true);
+                    return;
+                }
+                
+                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                const isFlareCoston2 = chainId === FLARE_NETWORK_PARAMS.chainId;
+                
+                if (isFlareCoston2) {
+                    updateResult('network-result', 'Connected to Flare Coston2 Testnet!');
+                } else {
+                    updateResult('network-result', `Connected to network with chainId: ${chainId}. This is not Flare Coston2 Testnet.`, true);
+                }
+                
+                displayObject('network-result', {
+                    chainId: chainId,
+                    isFlareCoston2: isFlareCoston2,
+                    expectedChainId: FLARE_NETWORK_PARAMS.chainId
+                });
+            } catch (error) {
+                updateResult('network-result', `Error checking network: ${error.message}`, true);
+                console.error(error);
+            }
+        });
+        
+        // 4. Switch to Flare Network
+        document.getElementById('switch-network').addEventListener('click', async function() {
+            try {
+                if (!window.ethereum) {
+                    updateResult('network-result', 'MetaMask is not installed!', true);
+                    return;
+                }
+                
+                updateResult('network-result', 'Switching to Flare Coston2 Testnet...');
+                
+                try {
+                    // Try to switch to the Flare Network
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: FLARE_NETWORK_PARAMS.chainId }]
+                    });
+                    
+                    updateResult('network-result', 'Successfully switched to Flare Coston2 Testnet!');
+                } catch (switchError) {
+                    // This error code indicates that the chain has not been added to MetaMask
+                    if (switchError.code === 4902) {
+                        try {
+                            await window.ethereum.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [FLARE_NETWORK_PARAMS]
+                            });
+                            updateResult('network-result', 'Flare Coston2 Testnet added and switched!');
+                        } catch (addError) {
+                            updateResult('network-result', `Error adding Flare Network: ${addError.message}`, true);
+                            console.error(addError);
+                        }
+                    } else {
+                        updateResult('network-result', `Error switching network: ${switchError.message}`, true);
+                        console.error(switchError);
+                    }
+                }
+                
+                // Verify the switch was successful
+                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                const isFlareCoston2 = chainId === FLARE_NETWORK_PARAMS.chainId;
+                
+                displayObject('network-result', {
+                    chainId: chainId,
+                    isFlareCoston2: isFlareCoston2,
+                    expectedChainId: FLARE_NETWORK_PARAMS.chainId
+                });
+            } catch (error) {
+                updateResult('network-result', `Error: ${error.message}`, true);
+                console.error(error);
+            }
+        });
+        
+        // 5. Send a simple transaction
+        document.getElementById('send-transaction').addEventListener('click', async function() {
+            try {
+                if (!window.ethereum) {
+                    updateResult('transaction-result', 'MetaMask is not installed!', true);
+                    return;
+                }
+                
+                // Get the current account
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                
+                if (accounts.length === 0) {
+                    updateResult('transaction-result', 'No connected accounts! Please connect to MetaMask first.', true);
+                    return;
+                }
+                
+                const fromAddress = accounts[0];
+                
+                // Create a simple transaction (sending 0 ETH to yourself)
+                updateResult('transaction-result', 'Preparing transaction...');
+                
+                const transactionParameters = {
+                    from: fromAddress,
+                    to: fromAddress, // Sending to yourself
+                    value: '0x0', // 0 ETH
+                    gas: '0x5208', // 21000 gas
+                };
+                
+                displayObject('transaction-result', {
+                    transactionParameters: transactionParameters
+                });
+                
+                updateResult('transaction-result', 'Sending transaction...');
+                
+                const txHash = await window.ethereum.request({
+                    method: 'eth_sendTransaction',
+                    params: [transactionParameters],
+                });
+                
+                updateResult('transaction-result', `Transaction sent! Hash: ${txHash}`);
+                
+                displayObject('transaction-result', {
+                    txHash: txHash,
+                    blockExplorerLink: `${FLARE_NETWORK_PARAMS.blockExplorerUrls[0]}/tx/${txHash}`
+                });
+            } catch (error) {
+                updateResult('transaction-result', `Error sending transaction: ${error.message}`, true);
+                console.error(error);
+            }
+        });
+        
+        // 6. Call contract function
+        document.getElementById('call-contract').addEventListener('click', async function() {
+            try {
+                if (!window.ethereum) {
+                    updateResult('contract-result', 'MetaMask is not installed!', true);
+                    return;
+                }
+                
+                // Get the current account
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                
+                if (accounts.length === 0) {
+                    updateResult('contract-result', 'No connected accounts! Please connect to MetaMask first.', true);
+                    return;
+                }
+                
+                const fromAddress = accounts[0];
+                
+                // Create a request ID
+                const requestIdData = {
+                    buyer: fromAddress,
+                    dataType: 'Sentinel-2 Level 2A',
+                    timestamp: Date.now()
+                };
+                
+                // Convert to JSON string
+                const requestIdJson = JSON.stringify(requestIdData);
+                
+                // Create a hash of the request ID data
+                // Note: This is a simplified version, in production you'd use a proper hashing function
+                const requestId = '0x' + Array.from(requestIdJson).map(c => 
+                    c.charCodeAt(0).toString(16).padStart(2, '0')
+                ).join('').padEnd(64, '0').substring(0, 64);
+                
+                updateResult('contract-result', 'Preparing contract call...');
+                
+                // Function signature for purchase(bytes32)
+                const functionSelector = '0x3c2a7e7c';
+                
+                // Encode the function call parameters (simplified)
+                const encodedParams = requestId.padStart(64, '0');
+                
+                // Create the transaction data
+                const data = `${functionSelector}${encodedParams.startsWith('0x') ? encodedParams.slice(2) : encodedParams}`;
+                
+                // Convert price to wei (0.01 ETH)
+                const valueInWei = '0x' + (0.01 * 1e18).toString(16);
+                
+                const transactionParameters = {
+                    from: fromAddress,
+                    to: CONTRACT_ADDRESS,
+                    value: valueInWei,
+                    data: data,
+                    gas: '0x186A0', // 100000 gas
+                };
+                
+                displayObject('contract-result', {
+                    requestId: requestId,
+                    functionSelector: functionSelector,
+                    data: data,
+                    valueInWei: valueInWei,
+                    transactionParameters: transactionParameters
+                });
+                
+                updateResult('contract-result', 'Calling contract function...');
+                
+                const txHash = await window.ethereum.request({
+                    method: 'eth_sendTransaction',
+                    params: [transactionParameters],
+                });
+                
+                updateResult('contract-result', `Contract function called! Hash: ${txHash}`);
+                
+                displayObject('contract-result', {
+                    txHash: txHash,
+                    blockExplorerLink: `${FLARE_NETWORK_PARAMS.blockExplorerUrls[0]}/tx/${txHash}`
+                });
+            } catch (error) {
+                updateResult('contract-result', `Error calling contract: ${error.message}`, true);
+                console.error(error);
+            }
+        });
+    </script>
+</body>
+</html>
