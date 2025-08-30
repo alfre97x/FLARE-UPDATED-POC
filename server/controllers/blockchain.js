@@ -22,7 +22,9 @@ exports.getBlockchainConfig = (req, res) => {
         const fdcVerificationAddress = process.env.FDC_VERIFICATION_ADDRESS;
         
         // Build chain/network configuration (supports dynamic networks, e.g. Coston3)
-        const chainId = process.env.CHAIN_ID || '0x72';
+        // Normalize CHAIN_ID to 0x-prefixed lowercase hex as required by MetaMask
+        const rawChainId = process.env.CHAIN_ID || '0x72';
+        const chainId = (rawChainId.toString().startsWith('0x') ? rawChainId : '0x' + parseInt(rawChainId, 10).toString(16)).toLowerCase();
         const chainName = process.env.CHAIN_NAME || 'Coston2 Testnet';
         const blockExplorerUrl = process.env.BLOCK_EXPLORER_URL || 'https://coston2-explorer.flare.network';
         const nativeCurrency = {
